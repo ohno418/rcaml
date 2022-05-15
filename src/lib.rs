@@ -1,19 +1,21 @@
-use std::io;
-use std::io::Write;
+mod eval;
+mod read;
+
+use eval::eval;
+use read::{read, ReadError};
 
 pub fn repl() -> Result<(), &'static str> {
-    let input = {
-        print!("> ");
-        io::stdout().flush().expect("failed to flush");
-
-        let mut buffer = String::new();
-        match io::stdin().read_line(&mut buffer) {
-            Ok(_) => buffer.trim().to_string(),
-            Err(_) => return Err("failed to read an input"),
-        }
-    };
-
-    println!("input = {}", input);
+    loop {
+        let input = match read() {
+            Ok(input) => input,
+            Err(ReadError::CtrlD) => {
+                println!("");
+                break;
+            }
+            Err(ReadError::Unknown) => return Err("failed to read an input"),
+        };
+        println!("{}", eval(input)?);
+    }
 
     Ok(())
 }
