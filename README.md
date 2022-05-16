@@ -2,7 +2,7 @@
 rcaml is a toy OCaml REPL implementation.
 
 # Goals
-RCaml sets its goals from the viewpoints of syntax and type inference.
+rcaml sets its goals from the viewpoints of syntax and type inference.
 
 ### syntax
 Supports a very small subset syntax of OCaml.
