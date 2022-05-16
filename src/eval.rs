@@ -1,4 +1,4 @@
-pub fn eval(input: String) -> Result<String, &'static str> {
+pub fn eval(input: String) -> Result<String, String> {
     Ok(input)
 }
 

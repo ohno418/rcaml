@@ -4,7 +4,7 @@ mod read;
 use eval::eval;
 use read::{read, ReadError};
 
-pub fn repl() -> Result<(), &'static str> {
+pub fn repl() -> Result<(), String> {
     loop {
         let input = match read() {
             Ok(input) => input,
@@ -12,7 +12,7 @@ pub fn repl() -> Result<(), &'static str> {
                 println!("");
                 break;
             }
-            Err(ReadError::Unknown) => return Err("failed to read an input"),
+            Err(ReadError::Unknown) => return Err("failed to read an input".to_string()),
         };
         println!("{}", eval(input)?);
     }
