@@ -1,3 +1,9 @@
+mod lexer;
+mod parser;
+
+use lexer::tokenize;
+use parser::{parse, Node};
+
 // <program> ::= <expr> ";;"
 pub fn eval(input: String) -> Result<String, String> {
     let expr = match input.find(";;") {
@@ -5,10 +11,11 @@ pub fn eval(input: String) -> Result<String, String> {
         None => return Err(r#"";;" is required at the end of a expression"#.to_string()),
     };
 
-    match expr.parse::<i64>() {
-        Ok(n) => Ok(n.to_string()),
-        Err(_) => Err(format!(r#"Cannot parse "{}" into int"#, expr)),
-    }
+    let tokens = tokenize(expr)?;
+    let ast = parse(&tokens)?;
+
+    let Node::Int(n) = ast;
+    Ok(n.to_string())
 }
 
 #[cfg(test)]
