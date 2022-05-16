@@ -14,7 +14,11 @@ pub fn repl() -> Result<(), String> {
             }
             Err(ReadError::Unknown) => return Err("failed to read an input".to_string()),
         };
-        println!("{}", eval(input)?);
+
+        match eval(input) {
+            Ok(output) => println!("{}", output),
+            Err(err) => println!("Error: {}", err),
+        }
     }
 
     Ok(())
