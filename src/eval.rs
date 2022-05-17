@@ -1,11 +1,13 @@
 mod lexer;
 mod parser;
+mod eval_ast;
 
 use lexer::tokenize;
-use parser::{parse, Node};
+use parser::parse;
+use eval_ast::{eval_ast, Output};
 
 // <program> ::= <expr> ";;"
-pub fn eval(input: String) -> Result<String, String> {
+pub fn eval(input: String) -> Result<Output, String> {
     let expr = match input.find(";;") {
         Some(idx) => (&input[0..idx]).trim(),
         None => return Err(r#"";;" is required at the end of a expression"#.to_string()),
@@ -13,9 +15,7 @@ pub fn eval(input: String) -> Result<String, String> {
 
     let tokens = tokenize(expr)?;
     let ast = parse(&tokens)?;
-
-    let Node::Int(n) = ast;
-    Ok(n.to_string())
+    eval_ast(&ast)
 }
 
 #[cfg(test)]
@@ -25,15 +25,7 @@ mod tests {
     #[test]
     fn parses_integer_input() {
         let input = "123;;".to_string();
-        let expected = "123";
-        let actual = eval(input).unwrap();
-        assert_eq!(expected, actual);
-    }
-
-    #[test]
-    fn parses_negative_integer_input() {
-        let input = "-42;;".to_string();
-        let expected = "-42";
+        let expected = Output::Int(123);
         let actual = eval(input).unwrap();
         assert_eq!(expected, actual);
     }
@@ -47,7 +39,15 @@ mod tests {
     #[test]
     fn parses_input_with_spaces() {
         let input = " 123  ;;".to_string();
-        let expected = "123";
+        let expected = Output::Int(123);
+        let actual = eval(input).unwrap();
+        assert_eq!(expected, actual);
+    }
+
+    #[test]
+    fn parses_addition() {
+        let input = "2+3;;".to_string();
+        let expected = Output::Int(5);
         let actual = eval(input).unwrap();
         assert_eq!(expected, actual);
     }
