@@ -19,11 +19,11 @@ pub(super) fn eval_ast(ast: &Node) -> Result<Output, String> {
         Node::Int(i) => Ok(Output::Int(*i)),
         Node::Add(lhs, rhs) => {
             let (Output::Int(l), Output::Int(r)) = (eval_ast(lhs)?, eval_ast(rhs)?);
-            Ok(Output::Int(l+r))
+            Ok(Output::Int(l + r))
         }
         Node::Sub(lhs, rhs) => {
             let (Output::Int(l), Output::Int(r)) = (eval_ast(lhs)?, eval_ast(rhs)?);
-            Ok(Output::Int(l-r))
+            Ok(Output::Int(l - r))
         }
     }
 }
@@ -45,10 +45,7 @@ mod tests {
         // 2+3-4+5
         let ast = Node::Add(
             Box::new(Node::Sub(
-                Box::new(Node::Add(
-                    Box::new(Node::Int(2)),
-                    Box::new(Node::Int(3)),
-                )),
+                Box::new(Node::Add(Box::new(Node::Int(2)), Box::new(Node::Int(3)))),
                 Box::new(Node::Int(4)),
             )),
             Box::new(Node::Int(5)),

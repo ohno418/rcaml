@@ -1,10 +1,10 @@
+mod eval_ast;
 mod lexer;
 mod parser;
-mod eval_ast;
 
+use eval_ast::eval_ast;
 use lexer::tokenize;
 use parser::parse;
-use eval_ast::eval_ast;
 
 // <program> ::= <expr> ";;"
 pub fn eval(input: String) -> Result<String, String> {

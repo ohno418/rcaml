@@ -13,21 +13,19 @@ pub(super) fn parse(tokens: &[Token]) -> Result<Node, String> {
 
     loop {
         match rest.get(0) {
-            Some(Token::Punct(p)) => {
-                match &**p {
-                    "+" => {
-                        let rhs;
-                        (rhs, rest) = parse_int(&rest[1..])?;
-                        node = Node::Add(Box::new(node), Box::new(rhs));
-                    }
-                    "-" => {
-                        let rhs;
-                        (rhs, rest) = parse_int(&rest[1..])?;
-                        node = Node::Sub(Box::new(node), Box::new(rhs));
-                    }
-                    _ => break,
+            Some(Token::Punct(p)) => match &**p {
+                "+" => {
+                    let rhs;
+                    (rhs, rest) = parse_int(&rest[1..])?;
+                    node = Node::Add(Box::new(node), Box::new(rhs));
                 }
-            }
+                "-" => {
+                    let rhs;
+                    (rhs, rest) = parse_int(&rest[1..])?;
+                    node = Node::Sub(Box::new(node), Box::new(rhs));
+                }
+                _ => break,
+            },
             _ => break,
         }
     }
@@ -69,10 +67,7 @@ mod tests {
         ];
         let expected = Node::Add(
             Box::new(Node::Sub(
-                Box::new(Node::Add(
-                    Box::new(Node::Int(2)),
-                    Box::new(Node::Int(3)),
-                )),
+                Box::new(Node::Add(Box::new(Node::Int(2)), Box::new(Node::Int(3)))),
                 Box::new(Node::Int(4)),
             )),
             Box::new(Node::Int(5)),
