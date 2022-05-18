@@ -25,6 +25,10 @@ pub(super) fn eval_ast(ast: &Node) -> Result<Output, String> {
             let (Output::Int(l), Output::Int(r)) = (eval_ast(lhs)?, eval_ast(rhs)?);
             Ok(Output::Int(l - r))
         }
+        Node::Mul(lhs, rhs) => {
+            let (Output::Int(l), Output::Int(r)) = (eval_ast(lhs)?, eval_ast(rhs)?);
+            Ok(Output::Int(l * r))
+        }
     }
 }
 
@@ -41,16 +45,19 @@ mod tests {
     }
 
     #[test]
-    fn eval_add_sub() {
-        // 2+3-4+5
-        let ast = Node::Add(
-            Box::new(Node::Sub(
-                Box::new(Node::Add(Box::new(Node::Int(2)), Box::new(Node::Int(3)))),
-                Box::new(Node::Int(4)),
+    fn eval_arithmetic_expr() {
+        // 2+3*4-5
+        let ast = Node::Sub(
+            Box::new(Node::Add(
+                Box::new(Node::Int(2)),
+                Box::new(Node::Mul(
+                    Box::new(Node::Int(3)),
+                    Box::new(Node::Int(4)),
+                )),
             )),
             Box::new(Node::Int(5)),
         );
-        let expected = Output::Int(6);
+        let expected = Output::Int(9);
         let actual = eval_ast(&ast).unwrap();
         assert_eq!(expected, actual);
     }

@@ -52,4 +52,12 @@ mod tests {
         let actual = eval(input).unwrap();
         assert_eq!(expected, actual);
     }
+
+    #[test]
+    fn parses_expr_with_multiply() {
+        let input = "2+3*4-5;;".to_string();
+        let expected = "- : int = 9";
+        let actual = eval(input).unwrap();
+        assert_eq!(expected, actual);
+    }
 }
