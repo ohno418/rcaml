@@ -52,4 +52,12 @@ mod tests {
         let actual = eval(input).unwrap();
         assert_eq!(expected, actual);
     }
+
+    #[test]
+    fn parses_subtract() {
+        let input = "6-2;;".to_string();
+        let expected = "- : int = 4";
+        let actual = eval(input).unwrap();
+        assert_eq!(expected, actual);
+    }
 }

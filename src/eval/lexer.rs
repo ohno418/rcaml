@@ -23,7 +23,7 @@ pub(super) fn tokenize(input: &str) -> Result<Vec<Token>, String> {
         // punctuators
         if c.is_ascii_punctuation() {
             match c {
-                '+' => {
+                '+' | '-' => {
                     tokens.push(Token::Punct(c.to_string()));
                     rest = &rest[1..];
                     continue;
@@ -79,6 +79,14 @@ mod tests {
     fn tokenizes_addition() {
         let input = "2+3";
         let expected = vec![Token::Int(2), Token::Punct("+".to_string()), Token::Int(3)];
+        let actual = tokenize(input).unwrap();
+        assert_eq!(expected, actual);
+    }
+
+    #[test]
+    fn tokenizes_subtract() {
+        let input = "4-1";
+        let expected = vec![Token::Int(4), Token::Punct("-".to_string()), Token::Int(1)];
         let actual = tokenize(input).unwrap();
         assert_eq!(expected, actual);
     }

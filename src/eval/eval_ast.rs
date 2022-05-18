@@ -21,6 +21,10 @@ pub(super) fn eval_ast(ast: &Node) -> Result<Output, String> {
             let (Output::Int(l), Output::Int(r)) = (eval_ast(lhs)?, eval_ast(rhs)?);
             Ok(Output::Int(l+r))
         }
+        Node::Sub(lhs, rhs) => {
+            let (Output::Int(l), Output::Int(r)) = (eval_ast(lhs)?, eval_ast(rhs)?);
+            Ok(Output::Int(l-r))
+        }
     }
 }
 
@@ -44,6 +48,18 @@ mod tests {
             Box::new(Node::Int(3)),
         );
         let expected = Output::Int(5);
+        let actual = eval_ast(&ast).unwrap();
+        assert_eq!(expected, actual);
+    }
+
+    #[test]
+    fn eval_subtract() {
+        // 4-1
+        let ast = Node::Sub(
+            Box::new(Node::Int(4)),
+            Box::new(Node::Int(1)),
+        );
+        let expected = Output::Int(3);
         let actual = eval_ast(&ast).unwrap();
         assert_eq!(expected, actual);
     }
