@@ -7,21 +7,28 @@ pub(super) enum Node {
     Sub(Box<Node>, Box<Node>), // -
 }
 
-// <expr> ::= <int> (("+" | "-") <int>)?
+// <expr> ::= <int> (("+" | "-") <int>)*
 pub(super) fn parse(tokens: &[Token]) -> Result<Node, String> {
-    let (mut node, rest) = parse_int(tokens)?;
+    let (mut node, mut rest) = parse_int(tokens)?;
 
-    if let Some(Token::Punct(p)) = rest.get(0) {
-        match &**p {
-            "+" => {
-                let (rhs, _) = parse_int(&rest[1..])?;
-                node = Node::Add(Box::new(node), Box::new(rhs));
+    loop {
+        match rest.get(0) {
+            Some(Token::Punct(p)) => {
+                match &**p {
+                    "+" => {
+                        let rhs;
+                        (rhs, rest) = parse_int(&rest[1..])?;
+                        node = Node::Add(Box::new(node), Box::new(rhs));
+                    }
+                    "-" => {
+                        let rhs;
+                        (rhs, rest) = parse_int(&rest[1..])?;
+                        node = Node::Sub(Box::new(node), Box::new(rhs));
+                    }
+                    _ => break,
+                }
             }
-            "-" => {
-                let (rhs, _) = parse_int(&rest[1..])?;
-                node = Node::Sub(Box::new(node), Box::new(rhs));
-            }
-            _ => (),
+            _ => break,
         }
     }
 
@@ -49,24 +56,26 @@ mod tests {
     }
 
     #[test]
-    fn parses_addition() {
-        // 2+3
-        let tokens = vec![Token::Int(2), Token::Punct("+".to_string()), Token::Int(3)];
+    fn parses_add_sub() {
+        // 2+3-4+5
+        let tokens = vec![
+            Token::Int(2),
+            Token::Punct("+".to_string()),
+            Token::Int(3),
+            Token::Punct("-".to_string()),
+            Token::Int(4),
+            Token::Punct("+".to_string()),
+            Token::Int(5),
+        ];
         let expected = Node::Add(
-            Box::new(Node::Int(2)),
-            Box::new(Node::Int(3)),
-        );
-        let actual = parse(&tokens).unwrap();
-        assert_eq!(expected, actual);
-    }
-
-    #[test]
-    fn parses_subtract() {
-        // 4-1
-        let tokens = vec![Token::Int(4), Token::Punct("-".to_string()), Token::Int(1)];
-        let expected = Node::Sub(
-            Box::new(Node::Int(4)),
-            Box::new(Node::Int(1)),
+            Box::new(Node::Sub(
+                Box::new(Node::Add(
+                    Box::new(Node::Int(2)),
+                    Box::new(Node::Int(3)),
+                )),
+                Box::new(Node::Int(4)),
+            )),
+            Box::new(Node::Int(5)),
         );
         let actual = parse(&tokens).unwrap();
         assert_eq!(expected, actual);

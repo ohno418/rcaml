@@ -41,25 +41,19 @@ mod tests {
     }
 
     #[test]
-    fn eval_addition() {
-        // 2+3
+    fn eval_add_sub() {
+        // 2+3-4+5
         let ast = Node::Add(
-            Box::new(Node::Int(2)),
-            Box::new(Node::Int(3)),
+            Box::new(Node::Sub(
+                Box::new(Node::Add(
+                    Box::new(Node::Int(2)),
+                    Box::new(Node::Int(3)),
+                )),
+                Box::new(Node::Int(4)),
+            )),
+            Box::new(Node::Int(5)),
         );
-        let expected = Output::Int(5);
-        let actual = eval_ast(&ast).unwrap();
-        assert_eq!(expected, actual);
-    }
-
-    #[test]
-    fn eval_subtract() {
-        // 4-1
-        let ast = Node::Sub(
-            Box::new(Node::Int(4)),
-            Box::new(Node::Int(1)),
-        );
-        let expected = Output::Int(3);
+        let expected = Output::Int(6);
         let actual = eval_ast(&ast).unwrap();
         assert_eq!(expected, actual);
     }

@@ -46,16 +46,8 @@ mod tests {
     }
 
     #[test]
-    fn parses_addition() {
-        let input = "2+3;;".to_string();
-        let expected = "- : int = 5";
-        let actual = eval(input).unwrap();
-        assert_eq!(expected, actual);
-    }
-
-    #[test]
-    fn parses_subtract() {
-        let input = "6-2;;".to_string();
+    fn parses_add_sub() {
+        let input = "2+3+4-5;;".to_string();
         let expected = "- : int = 4";
         let actual = eval(input).unwrap();
         assert_eq!(expected, actual);
