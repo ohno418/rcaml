@@ -9,7 +9,7 @@ pub enum Output {
 impl fmt::Display for Output {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         match self {
-            Self::Int(int) => write!(f, "{}", int),
+            Self::Int(int) => write!(f, "- : int = {}", int),
         }
     }
 }
