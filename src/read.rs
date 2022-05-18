@@ -7,7 +7,7 @@ pub enum ReadError {
 }
 
 pub fn read() -> Result<String, ReadError> {
-    print!("> ");
+    print!("# ");
     io::stdout().flush().expect("failed to flush");
 
     let mut input = String::new();
