@@ -49,7 +49,7 @@ fn parse_bind(tokens: &[Token]) -> Result<(Node, &[Token]), String> {
 
             match rest.get(0) {
                 Some(Token::Punct(p)) if p == "=" => rest = &rest[1..],
-                _ => return Err("Expected an identifier".to_string()),
+                _ => return Err("Expected =".to_string()),
             };
 
             let rhs;
