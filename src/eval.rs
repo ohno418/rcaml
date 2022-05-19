@@ -9,6 +9,7 @@ use parser::parse;
 
 // <program> ::= <expr> ";;"
 pub(crate) fn eval(input: String, vals: &mut Vals) -> Result<String, String> {
+    // Extract an expression that precedes ";;".
     let expr = match input.find(";;") {
         Some(idx) => (&input[0..idx]).trim(),
         None => return Err(r#"";;" is required at the end of a expression"#.to_string()),
