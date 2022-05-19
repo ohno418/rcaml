@@ -81,4 +81,44 @@ mod tests {
         assert_eq!(expected, actual);
         assert_eq!(vals, Vals(HashMap::from([("foo".to_string(), 456)])),);
     }
+
+    #[test]
+    fn eval_local_binding() {
+        let input = "let lv = 345 in lv + 2 ;;".to_string();
+        let mut vals = Vals::new();
+        let expected = "- : int = 347";
+        let actual = eval(input, &mut vals).unwrap();
+        assert_eq!(expected, actual);
+        assert_eq!(vals, Vals::new());
+    }
+
+    #[test]
+    fn eval_nested_local_bindings_1() {
+        let input = r#"
+            let a = 1 in
+            let b = 2 in
+            a ;;
+        "#
+        .to_string();
+        let mut vals = Vals::new();
+        let expected = "- : int = 1";
+        let actual = eval(input, &mut vals).unwrap();
+        assert_eq!(expected, actual);
+        assert_eq!(vals, Vals::new());
+    }
+
+    #[test]
+    fn eval_nested_local_bindings_2() {
+        let input = r#"
+            let a = 1 in
+            let b = 2 in
+            b ;;
+        "#
+        .to_string();
+        let mut vals = Vals::new();
+        let expected = "- : int = 2";
+        let actual = eval(input, &mut vals).unwrap();
+        assert_eq!(expected, actual);
+        assert_eq!(vals, Vals::new());
+    }
 }

@@ -2,18 +2,24 @@ use super::lexer::{KwKind, Token};
 
 #[derive(Debug, PartialEq)]
 pub(super) enum Node {
-    Int(i64),                   // integer
-    Add(Box<Node>, Box<Node>),  // +
-    Sub(Box<Node>, Box<Node>),  // -
-    Mul(Box<Node>, Box<Node>),  // *
-    Div(Box<Node>, Box<Node>),  // /
-    Val(String),                // bound value
-    Bind(Box<Node>, Box<Node>), // binding
+    Int(i64),                        // integer
+    Add(Box<Node>, Box<Node>),       // +
+    Sub(Box<Node>, Box<Node>),       // -
+    Mul(Box<Node>, Box<Node>),       // *
+    Div(Box<Node>, Box<Node>),       // /
+    Val(String),                     // bound value
+    Bind(Box<Node>, Box<Node>),      // global binding
+    LocalBind(Box<LocalBindStruct>), // local binding
 }
 
-// <expr> ::= <bind>
+#[derive(Debug, PartialEq)]
+pub(super) struct LocalBindStruct {
+    pub(super) bind: (Node, Node), // Bind node representing e.g. `let x = 42` part
+    pub(super) scope: Node,        // expression node in scope, followed by `in`
+}
+
 pub(super) fn parse(tokens: &[Token]) -> Result<Node, String> {
-    let (node, rest) = parse_bind(tokens)?;
+    let (node, rest) = parse_expr(tokens)?;
 
     if rest.len() != 0 {
         return Err(format!("Found extra token: {:?}", rest));
@@ -22,31 +28,50 @@ pub(super) fn parse(tokens: &[Token]) -> Result<Node, String> {
     Ok(node)
 }
 
-// <bind> ::= "let" identifier ("=" <add>)
+// <expr> ::= <bind>
+fn parse_expr(tokens: &[Token]) -> Result<(Node, &[Token]), String> {
+    parse_bind(tokens)
+}
+
+// <bind> ::= "let" identifier "=" <add> ("in" <expr>)?
 //          | <add>
 fn parse_bind(tokens: &[Token]) -> Result<(Node, &[Token]), String> {
-    if let Some(Token::Kw(KwKind::Let)) = tokens.get(0) {
-        let mut rest = &tokens[1..];
-        let ident = match rest.get(0) {
-            Some(Token::Ident(ident)) => {
-                rest = &rest[1..];
-                ident.clone()
+    match tokens.get(0) {
+        Some(Token::Kw(KwKind::Let)) => {
+            let mut rest = &tokens[1..];
+            let ident = match rest.get(0) {
+                Some(Token::Ident(ident)) => {
+                    rest = &rest[1..];
+                    ident.clone()
+                }
+                _ => return Err("Expected an identifier".to_string()),
+            };
+
+            match rest.get(0) {
+                Some(Token::Punct(p)) if p == "=" => rest = &rest[1..],
+                _ => return Err("Expected an identifier".to_string()),
+            };
+
+            let rhs;
+            (rhs, rest) = parse_add(rest)?;
+
+            match rest.get(0) {
+                Some(Token::Kw(KwKind::In)) => {
+                    let expr;
+                    (expr, rest) = parse_expr(&rest[1..])?;
+                    Ok((
+                        Node::LocalBind(Box::new(LocalBindStruct {
+                            bind: (Node::Val(ident), rhs),
+                            scope: expr,
+                        })),
+                        rest,
+                    ))
+                }
+                _ => Ok((Node::Bind(Box::new(Node::Val(ident)), Box::new(rhs)), rest)),
             }
-            _ => return Err("Expected an identifier".to_string()),
-        };
-        match rest.get(0) {
-            Some(Token::Punct(p)) if p == "=" => rest = &rest[1..],
-            _ => return Err("Expected an identifier".to_string()),
-        };
-
-        let rhs;
-        (rhs, rest) = parse_add(rest)?;
-
-        let node = Node::Bind(Box::new(Node::Val(ident)), Box::new(rhs));
-        return Ok((node, rest));
+        }
+        _ => parse_add(tokens),
     }
-
-    parse_add(tokens)
 }
 
 // <add> ::= <mul> (("+" | "-") <mul>)*
@@ -174,6 +199,27 @@ mod tests {
         // foo
         let tokens = vec![Token::Ident("foo".to_string())];
         let expected = Node::Val("foo".to_string());
+        let actual = parse(&tokens).unwrap();
+        assert_eq!(expected, actual);
+    }
+
+    #[test]
+    fn parses_local_binding() {
+        // let x = 5 in x + 2
+        let tokens = vec![
+            Token::Kw(KwKind::Let),
+            Token::Ident("x".to_string()),
+            Token::Punct("=".to_string()),
+            Token::Int(5),
+            Token::Kw(KwKind::In),
+            Token::Ident("x".to_string()),
+            Token::Punct("+".to_string()),
+            Token::Int(2),
+        ];
+        let expected = Node::LocalBind(Box::new(LocalBindStruct {
+            bind: (Node::Val("x".to_string()), Node::Int(5)),
+            scope: Node::Add(Box::new(Node::Val("x".to_string())), Box::new(Node::Int(2))),
+        }));
         let actual = parse(&tokens).unwrap();
         assert_eq!(expected, actual);
     }

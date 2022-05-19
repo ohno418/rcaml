@@ -5,8 +5,8 @@ use eval::eval;
 use read::{read, ReadError};
 use std::collections::HashMap;
 
-// global bound values
-#[derive(Debug, PartialEq)]
+// bound values
+#[derive(Clone, Debug, PartialEq)]
 struct Vals(HashMap<String, i64>);
 
 impl Vals {
