@@ -5,10 +5,11 @@ use eval::eval;
 use read::{read, ReadError};
 use std::collections::HashMap;
 
+// global bound values
 #[derive(Debug, PartialEq)]
-struct GVars(HashMap<String, i64>);
+struct Vals(HashMap<String, i64>);
 
-impl GVars {
+impl Vals {
     fn new() -> Self {
         Self(HashMap::new())
     }
@@ -25,7 +26,7 @@ impl GVars {
 }
 
 pub fn repl() -> Result<(), String> {
-    let mut gvars = GVars::new();
+    let mut vals = Vals::new();
 
     loop {
         let input = match read() {
@@ -37,12 +38,12 @@ pub fn repl() -> Result<(), String> {
             Err(ReadError::Unknown) => return Err("failed to read an input".to_string()),
         };
 
-        match eval(input, &mut gvars) {
+        match eval(input, &mut vals) {
             Ok(output) => println!("{}", output),
             Err(err) => println!("Error: {}", err),
         }
 
-        println!("global variables are: {:?}", gvars);
+        println!("global values are: {:?}", vals);
     }
 
     Ok(())

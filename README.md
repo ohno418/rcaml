@@ -9,10 +9,10 @@ Supports a very small subset syntax of OCaml.
 
 - All basic types, lists, tuples, and recods
 - Pattern match (may not support all syntax, though...)
-- Global and local variables, and functions including `rec`s
+- Global and local bound values, and functions including `rec`s
 
 ### Type inference
 Supports simple and easy type inference.
 
-- Statically-typed. Infers all variable and function types at compile time.
+- Statically-typed. Infers all types of bound values and functions at compile time.
 - Raises an error when a type is invalid.

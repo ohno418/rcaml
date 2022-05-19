@@ -7,7 +7,7 @@ pub(super) enum Node {
     Sub(Box<Node>, Box<Node>),  // -
     Mul(Box<Node>, Box<Node>),  // *
     Div(Box<Node>, Box<Node>),  // /
-    Var(String),                // variable
+    Val(String),                // bound value
     Bind(Box<Node>, Box<Node>), // binding
 }
 
@@ -42,7 +42,7 @@ fn parse_bind(tokens: &[Token]) -> Result<(Node, &[Token]), String> {
         let rhs;
         (rhs, rest) = parse_add(rest)?;
 
-        let node = Node::Bind(Box::new(Node::Var(ident)), Box::new(rhs));
+        let node = Node::Bind(Box::new(Node::Val(ident)), Box::new(rhs));
         return Ok((node, rest));
     }
 
@@ -101,11 +101,11 @@ fn parse_mul(tokens: &[Token]) -> Result<(Node, &[Token]), String> {
     Ok((node, rest))
 }
 
-// <primary> ::= <int> | <var-name>
+// <primary> ::= <int> | <val-name>
 fn parse_primary(tokens: &[Token]) -> Result<(Node, &[Token]), String> {
     match tokens.get(0) {
         Some(Token::Int(int)) => Ok((Node::Int(*int), &tokens[1..])),
-        Some(Token::Ident(name)) => Ok((Node::Var(name.clone()), &tokens[1..])),
+        Some(Token::Ident(name)) => Ok((Node::Val(name.clone()), &tokens[1..])),
         _ => Err("Failed to parse a primary".to_string()),
     }
 }
@@ -153,7 +153,7 @@ mod tests {
     }
 
     #[test]
-    fn parses_global_variable_binding() {
+    fn parses_global_binding() {
         // let foo = 123
         let tokens = vec![
             Token::Kw(KwKind::Let),
@@ -162,7 +162,7 @@ mod tests {
             Token::Int(123),
         ];
         let expected = Node::Bind(
-            Box::new(Node::Var("foo".to_string())),
+            Box::new(Node::Val("foo".to_string())),
             Box::new(Node::Int(123)),
         );
         let actual = parse(&tokens).unwrap();
@@ -170,10 +170,10 @@ mod tests {
     }
 
     #[test]
-    fn parses_variable_eval() {
+    fn parses_global_value_eval() {
         // foo
         let tokens = vec![Token::Ident("foo".to_string())];
-        let expected = Node::Var("foo".to_string());
+        let expected = Node::Val("foo".to_string());
         let actual = parse(&tokens).unwrap();
         assert_eq!(expected, actual);
     }
