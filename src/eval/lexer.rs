@@ -138,7 +138,7 @@ mod tests {
     }
 
     #[test]
-    fn tokenizes_variable_binding() {
+    fn tokenizes_global_variable_binding() {
         let input = "let foo = 123";
         let expected = vec![
             Token::Kw(KwKind::Let),

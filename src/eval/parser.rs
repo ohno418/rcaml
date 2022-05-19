@@ -16,7 +16,7 @@ pub(super) fn parse(tokens: &[Token]) -> Result<Node, String> {
     let (node, rest) = parse_bind(tokens)?;
 
     if rest.len() != 0 {
-        return Err("Found extra token".to_string());
+        return Err(format!("Found extra token: {:?}", rest));
     }
 
     Ok(node)
@@ -153,7 +153,7 @@ mod tests {
     }
 
     #[test]
-    fn parses_variable_binding() {
+    fn parses_global_variable_binding() {
         // let foo = 123
         let tokens = vec![
             Token::Kw(KwKind::Let),
