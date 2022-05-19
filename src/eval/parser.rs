@@ -6,6 +6,7 @@ pub(super) enum Node {
     Add(Box<Node>, Box<Node>),  // +
     Sub(Box<Node>, Box<Node>),  // -
     Mul(Box<Node>, Box<Node>),  // *
+    Div(Box<Node>, Box<Node>),  // /
     Var(String),                // variable
     Bind(Box<Node>, Box<Node>), // binding
 }
@@ -74,7 +75,7 @@ fn parse_add(tokens: &[Token]) -> Result<(Node, &[Token]), String> {
     Ok((node, rest))
 }
 
-// <mul> ::= <int> ("*" <int>)*
+// <mul> ::= <int> ("*" | "/" <int>)*
 fn parse_mul(tokens: &[Token]) -> Result<(Node, &[Token]), String> {
     let (mut node, mut rest) = parse_int(tokens)?;
 
@@ -85,6 +86,11 @@ fn parse_mul(tokens: &[Token]) -> Result<(Node, &[Token]), String> {
                     let rhs;
                     (rhs, rest) = parse_int(&rest[1..])?;
                     node = Node::Mul(Box::new(node), Box::new(rhs));
+                }
+                "/" => {
+                    let rhs;
+                    (rhs, rest) = parse_int(&rest[1..])?;
+                    node = Node::Div(Box::new(node), Box::new(rhs));
                 }
                 _ => break,
             },
@@ -117,22 +123,29 @@ mod tests {
 
     #[test]
     fn parses_arithmetic_expr() {
-        // 2+3*4-5
+        // 2+3*4+5-6/2
         let tokens = vec![
             Token::Int(2),
             Token::Punct("+".to_string()),
             Token::Int(3),
             Token::Punct("*".to_string()),
             Token::Int(4),
-            Token::Punct("-".to_string()),
+            Token::Punct("+".to_string()),
             Token::Int(5),
+            Token::Punct("-".to_string()),
+            Token::Int(6),
+            Token::Punct("/".to_string()),
+            Token::Int(2),
         ];
         let expected = Node::Sub(
             Box::new(Node::Add(
-                Box::new(Node::Int(2)),
-                Box::new(Node::Mul(Box::new(Node::Int(3)), Box::new(Node::Int(4)))),
+                Box::new(Node::Add(
+                    Box::new(Node::Int(2)),
+                    Box::new(Node::Mul(Box::new(Node::Int(3)), Box::new(Node::Int(4)))),
+                )),
+                Box::new(Node::Int(5)),
             )),
-            Box::new(Node::Int(5)),
+            Box::new(Node::Div(Box::new(Node::Int(6)), Box::new(Node::Int(2)))),
         );
         let actual = parse(&tokens).unwrap();
         assert_eq!(expected, actual);

@@ -34,13 +34,6 @@ mod tests {
     }
 
     #[test]
-    fn cannot_eval_not_integer_input() {
-        let input = "123abc;;".to_string();
-        let mut gvars: Vec<GVar> = vec![];
-        assert!(eval(input, &mut gvars).is_err())
-    }
-
-    #[test]
     fn eval_input_with_spaces() {
         let input = " 123  ;;".to_string();
         let mut gvars: Vec<GVar> = vec![];
@@ -50,19 +43,10 @@ mod tests {
     }
 
     #[test]
-    fn eval_add_sub() {
-        let input = "2+3+4-5;;".to_string();
+    fn eval_arithmetic_expr() {
+        let input = "2+3*4+5-6/2;;".to_string();
         let mut vars: Vec<GVar> = vec![];
-        let expected = "- : int = 4";
-        let actual = eval(input, &mut vars).unwrap();
-        assert_eq!(expected, actual);
-    }
-
-    #[test]
-    fn eval_expr_with_multiply() {
-        let input = "2+3*4-5;;".to_string();
-        let mut vars: Vec<GVar> = vec![];
-        let expected = "- : int = 9";
+        let expected = "- : int = 16";
         let actual = eval(input, &mut vars).unwrap();
         assert_eq!(expected, actual);
     }

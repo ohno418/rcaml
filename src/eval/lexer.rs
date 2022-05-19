@@ -38,7 +38,7 @@ pub(super) fn tokenize(input: &str) -> Result<Vec<Token>, String> {
         // punctuators
         if c.is_ascii_punctuation() {
             match c {
-                '+' | '-' | '*' | '=' => {
+                '+' | '-' | '*' | '/' | '=' => {
                     tokens.push(Token::Punct(c.to_string()));
                     rest = &rest[1..];
                     continue;
@@ -119,15 +119,19 @@ mod tests {
 
     #[test]
     fn tokenizes_arithmetic_expr() {
-        let input = "2+3*4-5";
+        let input = "2+3*4+5-6/2";
         let expected = vec![
             Token::Int(2),
             Token::Punct("+".to_string()),
             Token::Int(3),
             Token::Punct("*".to_string()),
             Token::Int(4),
-            Token::Punct("-".to_string()),
+            Token::Punct("+".to_string()),
             Token::Int(5),
+            Token::Punct("-".to_string()),
+            Token::Int(6),
+            Token::Punct("/".to_string()),
+            Token::Int(2),
         ];
         let actual = tokenize(input).unwrap();
         assert_eq!(expected, actual);
