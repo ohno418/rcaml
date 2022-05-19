@@ -22,19 +22,19 @@ pub(super) fn eval_ast(ast: &Node, gvars: &mut GVars) -> Result<Output, String> 
         Node::Int(i) => Ok(Output::Int(*i)),
         Node::Add(lhs, rhs) => match (eval_ast(lhs, gvars)?, eval_ast(rhs, gvars)?) {
             (Output::Int(l), Output::Int(r)) => Ok(Output::Int(l + r)),
-            _ => todo!(),
+            _ => unreachable!(),
         },
         Node::Sub(lhs, rhs) => match (eval_ast(lhs, gvars)?, eval_ast(rhs, gvars)?) {
             (Output::Int(l), Output::Int(r)) => Ok(Output::Int(l - r)),
-            _ => todo!(),
+            _ => unreachable!(),
         },
         Node::Mul(lhs, rhs) => match (eval_ast(lhs, gvars)?, eval_ast(rhs, gvars)?) {
             (Output::Int(l), Output::Int(r)) => Ok(Output::Int(l * r)),
-            _ => todo!(),
+            _ => unreachable!(),
         },
         Node::Div(lhs, rhs) => match (eval_ast(lhs, gvars)?, eval_ast(rhs, gvars)?) {
             (Output::Int(l), Output::Int(r)) => Ok(Output::Int(l / r)),
-            _ => todo!(),
+            _ => unreachable!(),
         },
         Node::Bind(lhs, rhs) => {
             let name = match &**lhs {
@@ -43,7 +43,7 @@ pub(super) fn eval_ast(ast: &Node, gvars: &mut GVars) -> Result<Output, String> 
             };
             let value = match eval_ast(rhs, gvars)? {
                 Output::Int(i) => i,
-                _ => todo!(),
+                _ => unreachable!(),
             };
             gvars.bind(name.clone(), value);
             Ok(Output::Val(name, value))
