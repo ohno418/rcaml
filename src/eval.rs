@@ -71,4 +71,14 @@ mod tests {
         assert_eq!(expected, actual);
         assert_eq!(gvars, GVars(HashMap::from([("foo".to_string(), 123)])),);
     }
+
+    #[test]
+    fn eval_bound_global_variable() {
+        let input = "foo ;;".to_string();
+        let mut gvars = GVars(HashMap::from([("foo".to_string(), 456)]));
+        let expected = "- : int = 456";
+        let actual = eval(input, &mut gvars).unwrap();
+        assert_eq!(expected, actual);
+        assert_eq!(gvars, GVars(HashMap::from([("foo".to_string(), 456)])),);
+    }
 }

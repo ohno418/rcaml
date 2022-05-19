@@ -13,6 +13,11 @@ impl GVars {
         Self(HashMap::new())
     }
 
+    fn get(&self, name: &str) -> Option<i64> {
+        let map = &self.0;
+        map.get(name).copied()
+    }
+
     fn bind(&mut self, name: String, value: i64) {
         let map = &mut self.0;
         map.insert(name, value);

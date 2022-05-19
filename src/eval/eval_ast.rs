@@ -48,7 +48,10 @@ pub(super) fn eval_ast(ast: &Node, gvars: &mut GVars) -> Result<Output, String> 
             gvars.bind(name.clone(), value);
             Ok(Output::Val(name, value))
         }
-        Node::Var(_name) => todo!(),
+        Node::Var(name) => match gvars.get(name) {
+            Some(value) => Ok(Output::Int(value)),
+            None => Err(format!(r#"Unknown variable "{}""#, name)),
+        },
     }
 }
 
@@ -111,5 +114,16 @@ mod tests {
         let actual = eval_ast(&ast, &mut gvars).unwrap();
         assert_eq!(expected, actual);
         assert_eq!(gvars, GVars(HashMap::from([("foo".to_string(), 987)])),);
+    }
+
+    #[test]
+    fn eval_bound_global_variable() {
+        // foo
+        let ast = Node::Var("foo".to_string());
+        let mut gvars = GVars(HashMap::from([("foo".to_string(), 123)]));
+        let expected = Output::Int(123);
+        let actual = eval_ast(&ast, &mut gvars).unwrap();
+        assert_eq!(expected, actual);
+        assert_eq!(gvars, GVars(HashMap::from([("foo".to_string(), 123)])));
     }
 }
