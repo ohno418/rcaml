@@ -2,6 +2,13 @@
 pub(super) enum Token {
     Int(i64),      // integer
     Punct(String), // punctuator
+    Kw(KwKind),    // keyword
+    Ident(String), // identifier
+}
+
+#[derive(Debug, PartialEq)]
+pub(super) enum KwKind {
+    Let, // let
 }
 
 pub(super) fn tokenize(input: &str) -> Result<Vec<Token>, String> {
@@ -20,10 +27,18 @@ pub(super) fn tokenize(input: &str) -> Result<Vec<Token>, String> {
             continue;
         }
 
+        // integers
+        if c.is_ascii_digit() {
+            let int;
+            (int, rest) = take_integer_from(rest)?;
+            tokens.push(Token::Int(int));
+            continue;
+        }
+
         // punctuators
         if c.is_ascii_punctuation() {
             match c {
-                '+' | '-' | '*' => {
+                '+' | '-' | '*' | '=' => {
                     tokens.push(Token::Punct(c.to_string()));
                     rest = &rest[1..];
                     continue;
@@ -32,11 +47,14 @@ pub(super) fn tokenize(input: &str) -> Result<Vec<Token>, String> {
             }
         }
 
-        // integer
-        if c.is_ascii_digit() {
-            let int;
-            (int, rest) = take_integer_from(rest)?;
-            tokens.push(Token::Int(int));
+        // identifiers and keywords
+        if let Ok((ident, r)) = take_identifier_from(rest) {
+            let tok = match &*ident {
+                "let" => Token::Kw(KwKind::Let),
+                _ => Token::Ident(ident),
+            };
+            tokens.push(tok);
+            rest = r;
             continue;
         }
 
@@ -60,6 +78,30 @@ fn take_integer_from(s: &str) -> Result<(i64, &str), String> {
     match int_str.parse() {
         Ok(int) => Ok((int, rest)),
         Err(_) => Err(format!(r#"Failed to parse "{}" into i64"#, s)),
+    }
+}
+
+fn take_identifier_from(s: &str) -> Result<(String, &str), String> {
+    let mut rest = s;
+    let mut ident: Option<String> = None;
+    loop {
+        match rest.chars().next() {
+            Some(c) if c.is_ascii_alphabetic() => {
+                ident = match ident {
+                    Some(mut ident) => {
+                        ident.push(c);
+                        Some(ident)
+                    }
+                    None => Some(c.to_string()),
+                };
+                rest = &rest[1..];
+            }
+            _ => break,
+        }
+    }
+    match ident {
+        Some(ident) => Ok((ident, rest)),
+        None => Err("Failed to take an identifier".to_string()),
     }
 }
 
@@ -92,8 +134,15 @@ mod tests {
     }
 
     #[test]
-    fn cannot_tokenize_not_integer() {
-        let input = "123abc";
-        assert!(tokenize(input).is_err());
+    fn tokenizes_variable_binding() {
+        let input = "let foo = 123";
+        let expected = vec![
+            Token::Kw(KwKind::Let),
+            Token::Ident("foo".to_string()),
+            Token::Punct("=".to_string()),
+            Token::Int(123),
+        ];
+        let actual = tokenize(input).unwrap();
+        assert_eq!(expected, actual);
     }
 }
