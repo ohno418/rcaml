@@ -3,17 +3,24 @@ mod read;
 
 use eval::eval;
 use read::{read, ReadError};
+use std::collections::HashMap;
 
-// global variable
 #[derive(Debug, PartialEq)]
-struct GVar {
-    name: String,
-    value: i64,
+struct GVars(HashMap<String, i64>);
+
+impl GVars {
+    fn new() -> Self {
+        Self(HashMap::new())
+    }
+
+    fn bind(&mut self, name: String, value: i64) {
+        let map = &mut self.0;
+        map.insert(name, value);
+    }
 }
 
 pub fn repl() -> Result<(), String> {
-    // TODO: use hashmap
-    let mut gvars: Vec<GVar> = Vec::new();
+    let mut gvars = GVars::new();
 
     loop {
         let input = match read() {

@@ -1,5 +1,5 @@
 use super::parser::Node;
-use super::GVar;
+use super::GVars;
 use std::fmt;
 
 #[derive(Debug, PartialEq)]
@@ -17,7 +17,7 @@ impl fmt::Display for Output {
     }
 }
 
-pub(super) fn eval_ast(ast: &Node, gvars: &mut Vec<GVar>) -> Result<Output, String> {
+pub(super) fn eval_ast(ast: &Node, gvars: &mut GVars) -> Result<Output, String> {
     match ast {
         Node::Int(i) => Ok(Output::Int(*i)),
         Node::Add(lhs, rhs) => match (eval_ast(lhs, gvars)?, eval_ast(rhs, gvars)?) {
@@ -45,12 +45,7 @@ pub(super) fn eval_ast(ast: &Node, gvars: &mut Vec<GVar>) -> Result<Output, Stri
                 Output::Int(i) => i,
                 _ => todo!(),
             };
-            let gvar = GVar {
-                name: name.clone(),
-                value,
-            };
-            // TODO: overwrite if exists
-            gvars.push(gvar);
+            gvars.bind(name.clone(), value);
             Ok(Output::Val(name, value))
         }
         Node::Var(_name) => todo!(),
@@ -60,11 +55,12 @@ pub(super) fn eval_ast(ast: &Node, gvars: &mut Vec<GVar>) -> Result<Output, Stri
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::collections::HashMap;
 
     #[test]
     fn eval_int() {
         let ast = Node::Int(123);
-        let mut gvars: Vec<GVar> = Vec::new();
+        let mut gvars = GVars::new();
         let expected = Output::Int(123);
         let actual = eval_ast(&ast, &mut gvars).unwrap();
         assert_eq!(expected, actual);
@@ -83,31 +79,37 @@ mod tests {
             )),
             Box::new(Node::Div(Box::new(Node::Int(6)), Box::new(Node::Int(2)))),
         );
-        let mut gvars: Vec<GVar> = Vec::new();
+        let mut gvars = GVars::new();
         let expected = Output::Int(16);
         let actual = eval_ast(&ast, &mut gvars).unwrap();
         assert_eq!(expected, actual);
     }
 
     #[test]
-    fn eval_variable_binding() {
+    fn eval_global_variable_binding() {
         // let foo = 123
         let ast = Node::Bind(
             Box::new(Node::Var("foo".to_string())),
             Box::new(Node::Int(123)),
         );
-        let mut gvars: Vec<GVar> = Vec::new();
+        let mut gvars = GVars::new();
         let expected = Output::Val("foo".to_string(), 123);
         let actual = eval_ast(&ast, &mut gvars).unwrap();
         assert_eq!(expected, actual);
-        assert_eq!(
-            gvars,
-            vec![GVar {
-                name: "foo".to_string(),
-                value: 123
-            }]
-        );
+        assert_eq!(gvars, GVars(HashMap::from([("foo".to_string(), 123)])),);
     }
 
-    // TODO: overwrite global variable test
+    #[test]
+    fn overwrites_global_variable() {
+        // let foo = 123
+        let ast = Node::Bind(
+            Box::new(Node::Var("foo".to_string())),
+            Box::new(Node::Int(987)),
+        );
+        let mut gvars = GVars::new();
+        let expected = Output::Val("foo".to_string(), 987);
+        let actual = eval_ast(&ast, &mut gvars).unwrap();
+        assert_eq!(expected, actual);
+        assert_eq!(gvars, GVars(HashMap::from([("foo".to_string(), 987)])),);
+    }
 }
