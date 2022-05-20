@@ -1,5 +1,5 @@
 use super::parser::{LocalBindStruct, Node};
-use super::Vals;
+use super::Bounds;
 use std::fmt;
 
 #[derive(Debug, PartialEq)]
@@ -17,26 +17,26 @@ impl fmt::Display for Output {
     }
 }
 
-pub(super) fn eval_ast(ast: &Node, vals: &mut Vals) -> Result<Output, String> {
+pub(super) fn eval_ast(ast: &Node, bounds: &mut Bounds) -> Result<Output, String> {
     match ast {
         Node::Int(i) => Ok(Output::Int(*i)),
-        Node::Add(lhs, rhs) => match (eval_ast(lhs, vals)?, eval_ast(rhs, vals)?) {
+        Node::Add(lhs, rhs) => match (eval_ast(lhs, bounds)?, eval_ast(rhs, bounds)?) {
             (Output::Int(l), Output::Int(r)) => Ok(Output::Int(l + r)),
             _ => unreachable!(),
         },
-        Node::Sub(lhs, rhs) => match (eval_ast(lhs, vals)?, eval_ast(rhs, vals)?) {
+        Node::Sub(lhs, rhs) => match (eval_ast(lhs, bounds)?, eval_ast(rhs, bounds)?) {
             (Output::Int(l), Output::Int(r)) => Ok(Output::Int(l - r)),
             _ => unreachable!(),
         },
-        Node::Mul(lhs, rhs) => match (eval_ast(lhs, vals)?, eval_ast(rhs, vals)?) {
+        Node::Mul(lhs, rhs) => match (eval_ast(lhs, bounds)?, eval_ast(rhs, bounds)?) {
             (Output::Int(l), Output::Int(r)) => Ok(Output::Int(l * r)),
             _ => unreachable!(),
         },
-        Node::Div(lhs, rhs) => match (eval_ast(lhs, vals)?, eval_ast(rhs, vals)?) {
+        Node::Div(lhs, rhs) => match (eval_ast(lhs, bounds)?, eval_ast(rhs, bounds)?) {
             (Output::Int(l), Output::Int(r)) => Ok(Output::Int(l / r)),
             _ => unreachable!(),
         },
-        Node::Val(name) => match vals.get(name) {
+        Node::Val(name) => match bounds.get(name) {
             Some(value) => Ok(Output::Int(value)),
             None => Err(format!("Unbound value {}", name)),
         },
@@ -45,11 +45,11 @@ pub(super) fn eval_ast(ast: &Node, vals: &mut Vals) -> Result<Output, String> {
                 Node::Val(name) => name.clone(),
                 _ => return Err("Expected a value name".to_string()),
             };
-            let value = match eval_ast(rhs, vals)? {
+            let value = match eval_ast(rhs, bounds)? {
                 Output::Int(i) => i,
                 _ => unreachable!(),
             };
-            vals.bind(name.clone(), value);
+            bounds.bind(name.clone(), value);
             Ok(Output::Val(name, value))
         }
         Node::LocalBind(local_bind) => {
@@ -60,15 +60,15 @@ pub(super) fn eval_ast(ast: &Node, vals: &mut Vals) -> Result<Output, String> {
                 Node::Val(name) => name.clone(),
                 _ => return Err("Expected a value name".to_string()),
             };
-            let value = match eval_ast(rhs, vals)? {
+            let value = match eval_ast(rhs, bounds)? {
                 Output::Int(i) => i,
                 _ => unreachable!(),
             };
             // Make new bound values from global bound values.
-            let mut vals_locally = vals.clone();
-            vals_locally.bind(name, value);
+            let mut bounds_locally = bounds.clone();
+            bounds_locally.bind(name, value);
             // Eval expresion in scope with local bindings.
-            match eval_ast(scope, &mut vals_locally)? {
+            match eval_ast(scope, &mut bounds_locally)? {
                 Output::Int(i) => Ok(Output::Int(i)),
                 _ => Err("Syntax error".to_string()),
             }
@@ -84,9 +84,9 @@ mod tests {
     #[test]
     fn eval_int() {
         let ast = Node::Int(123);
-        let mut vals = Vals::new();
+        let mut bounds = Bounds::new();
         let expected = Output::Int(123);
-        let actual = eval_ast(&ast, &mut vals).unwrap();
+        let actual = eval_ast(&ast, &mut bounds).unwrap();
         assert_eq!(expected, actual);
     }
 
@@ -103,9 +103,9 @@ mod tests {
             )),
             Box::new(Node::Div(Box::new(Node::Int(6)), Box::new(Node::Int(2)))),
         );
-        let mut vals = Vals::new();
+        let mut bounds = Bounds::new();
         let expected = Output::Int(16);
-        let actual = eval_ast(&ast, &mut vals).unwrap();
+        let actual = eval_ast(&ast, &mut bounds).unwrap();
         assert_eq!(expected, actual);
     }
 
@@ -116,11 +116,11 @@ mod tests {
             Box::new(Node::Val("foo".to_string())),
             Box::new(Node::Int(123)),
         );
-        let mut vals = Vals::new();
+        let mut bounds = Bounds::new();
         let expected = Output::Val("foo".to_string(), 123);
-        let actual = eval_ast(&ast, &mut vals).unwrap();
+        let actual = eval_ast(&ast, &mut bounds).unwrap();
         assert_eq!(expected, actual);
-        assert_eq!(vals, Vals(HashMap::from([("foo".to_string(), 123)])),);
+        assert_eq!(bounds, Bounds(HashMap::from([("foo".to_string(), 123)])),);
     }
 
     #[test]
@@ -130,22 +130,22 @@ mod tests {
             Box::new(Node::Val("foo".to_string())),
             Box::new(Node::Int(987)),
         );
-        let mut vals = Vals::new();
+        let mut bounds = Bounds::new();
         let expected = Output::Val("foo".to_string(), 987);
-        let actual = eval_ast(&ast, &mut vals).unwrap();
+        let actual = eval_ast(&ast, &mut bounds).unwrap();
         assert_eq!(expected, actual);
-        assert_eq!(vals, Vals(HashMap::from([("foo".to_string(), 987)])),);
+        assert_eq!(bounds, Bounds(HashMap::from([("foo".to_string(), 987)])),);
     }
 
     #[test]
     fn eval_bound_global_value() {
         // foo
         let ast = Node::Val("foo".to_string());
-        let mut vals = Vals(HashMap::from([("foo".to_string(), 123)]));
+        let mut bounds = Bounds(HashMap::from([("foo".to_string(), 123)]));
         let expected = Output::Int(123);
-        let actual = eval_ast(&ast, &mut vals).unwrap();
+        let actual = eval_ast(&ast, &mut bounds).unwrap();
         assert_eq!(expected, actual);
-        assert_eq!(vals, Vals(HashMap::from([("foo".to_string(), 123)])));
+        assert_eq!(bounds, Bounds(HashMap::from([("foo".to_string(), 123)])));
     }
 
     #[test]
@@ -155,11 +155,11 @@ mod tests {
             bind: (Node::Val("x".to_string()), Node::Int(5)),
             scope: Node::Add(Box::new(Node::Val("x".to_string())), Box::new(Node::Int(2))),
         }));
-        let mut vals = Vals::new();
+        let mut bounds = Bounds::new();
         let expected = Output::Int(7);
-        let actual = eval_ast(&ast, &mut vals).unwrap();
+        let actual = eval_ast(&ast, &mut bounds).unwrap();
         assert_eq!(expected, actual);
-        assert_eq!(vals, Vals::new());
+        assert_eq!(bounds, Bounds::new());
     }
 
     #[test]
@@ -172,10 +172,10 @@ mod tests {
                 Box::new(Node::Int(2)),
             ),
         }));
-        let mut vals = Vals(HashMap::from([("foo".to_string(), 123)]));
+        let mut bounds = Bounds(HashMap::from([("foo".to_string(), 123)]));
         let expected = Output::Int(7);
-        let actual = eval_ast(&ast, &mut vals).unwrap();
+        let actual = eval_ast(&ast, &mut bounds).unwrap();
         assert_eq!(expected, actual);
-        assert_eq!(vals, Vals(HashMap::from([("foo".to_string(), 123)])));
+        assert_eq!(bounds, Bounds(HashMap::from([("foo".to_string(), 123)])));
     }
 }

@@ -7,9 +7,9 @@ use std::collections::HashMap;
 
 // bound values
 #[derive(Clone, Debug, PartialEq)]
-struct Vals(HashMap<String, i64>);
+struct Bounds(HashMap<String, i64>);
 
-impl Vals {
+impl Bounds {
     fn new() -> Self {
         Self(HashMap::new())
     }
@@ -26,7 +26,7 @@ impl Vals {
 }
 
 pub fn repl() -> Result<(), String> {
-    let mut vals = Vals::new();
+    let mut bounds = Bounds::new();
 
     loop {
         let input = match read() {
@@ -38,12 +38,12 @@ pub fn repl() -> Result<(), String> {
             Err(ReadError::Unknown) => return Err("failed to read an input".to_string()),
         };
 
-        match eval(input, &mut vals) {
+        match eval(input, &mut bounds) {
             Ok(output) => println!("{}", output),
             Err(err) => println!("Error: {}", err),
         }
 
-        println!("global values are: {:?}", vals);
+        println!("global values are: {:?}", bounds);
     }
 
     Ok(())
