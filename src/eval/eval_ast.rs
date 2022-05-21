@@ -5,6 +5,7 @@ use std::fmt;
 #[derive(Debug, PartialEq)]
 pub(crate) enum Output {
     Int(i64),         // int
+    List,             // list
     Val(String, i64), // val
 }
 
@@ -12,6 +13,7 @@ impl fmt::Display for Output {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         match self {
             Self::Int(int) => write!(f, "- : int = {}", int),
+            Self::List => write!(f, "- : int list = []"),
             Self::Val(name, value) => write!(f, "val {} : int = {}", name, value),
         }
     }
@@ -36,6 +38,7 @@ pub(super) fn eval_ast(ast: &Node, bounds: &mut Bounds) -> Result<Output, String
             (Output::Int(l), Output::Int(r)) => Ok(Output::Int(l / r)),
             _ => unreachable!(),
         },
+        Node::List => Ok(Output::List),
         Node::Val(name) => match bounds.get(name) {
             Some(value) => Ok(Output::Int(value)),
             None => Err(format!("Unbound value {}", name)),
@@ -177,5 +180,16 @@ mod tests {
         let actual = eval_ast(&ast, &mut bounds).unwrap();
         assert_eq!(expected, actual);
         assert_eq!(bounds, Bounds(HashMap::from([("foo".to_string(), 123)])));
+    }
+
+    #[test]
+    fn eval_empty_list() {
+        // []
+        let ast = Node::List;
+        let mut bounds = Bounds::new();
+        let expected = Output::List;
+        let actual = eval_ast(&ast, &mut bounds).unwrap();
+        assert_eq!(expected, actual);
+        assert_eq!(bounds, Bounds::new());
     }
 }

@@ -122,4 +122,14 @@ mod tests {
         assert_eq!(expected, actual);
         assert_eq!(bounds, Bounds::new());
     }
+
+    #[test]
+    fn eval_empty_list() {
+        let input = "[];;".to_string();
+        let mut bounds = Bounds::new();
+        let expected = "- : int list = []";
+        let actual = eval(input, &mut bounds).unwrap();
+        assert_eq!(expected, actual);
+        assert_eq!(bounds, Bounds::new());
+    }
 }

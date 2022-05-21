@@ -39,7 +39,7 @@ pub(super) fn tokenize(input: &str) -> Result<Vec<Token>, String> {
         // punctuators
         if c.is_ascii_punctuation() {
             match c {
-                '+' | '-' | '*' | '/' | '=' => {
+                '+' | '-' | '*' | '/' | '=' | '[' | ']' => {
                     tokens.push(Token::Punct(c.to_string()));
                     rest = &rest[1..];
                     continue;
@@ -163,6 +163,14 @@ mod tests {
             Token::Kw(KwKind::In),
             Token::Ident("x".to_string()),
         ];
+        let actual = tokenize(input).unwrap();
+        assert_eq!(expected, actual);
+    }
+
+    #[test]
+    fn tokenizes_empty_list() {
+        let input = "[]";
+        let expected = vec![Token::Punct("[".to_string()), Token::Punct("]".to_string())];
         let actual = tokenize(input).unwrap();
         assert_eq!(expected, actual);
     }

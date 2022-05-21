@@ -7,6 +7,7 @@ pub(super) enum Node {
     Sub(Box<Node>, Box<Node>),       // -
     Mul(Box<Node>, Box<Node>),       // *
     Div(Box<Node>, Box<Node>),       // /
+    List,                            // list
     Val(String),                     // bound value
     Bind(Box<Node>, Box<Node>),      // global binding
     LocalBind(Box<LocalBindStruct>), // local binding
@@ -126,13 +127,27 @@ fn parse_mul(tokens: &[Token]) -> Result<(Node, &[Token]), String> {
     Ok((node, rest))
 }
 
-// <primary> ::= <int> | <val-name>
+// <primary> ::= <int> | <val-name> | <list>
 fn parse_primary(tokens: &[Token]) -> Result<(Node, &[Token]), String> {
     match tokens.get(0) {
         Some(Token::Int(int)) => Ok((Node::Int(*int), &tokens[1..])),
         Some(Token::Ident(name)) => Ok((Node::Val(name.clone()), &tokens[1..])),
+        Some(Token::Punct(p)) if p == "[" => parse_list(tokens),
         _ => Err("Failed to parse a primary".to_string()),
     }
+}
+
+// <list> ::= "[]"
+fn parse_list(tokens: &[Token]) -> Result<(Node, &[Token]), String> {
+    match tokens.get(0) {
+        Some(Token::Punct(p)) if p == "[" => match tokens.get(1) {
+            Some(Token::Punct(p)) if p == "]" => return Ok((Node::List, &tokens[2..])),
+            _ => (),
+        },
+        _ => (),
+    }
+
+    Err("Failed to parse a list".to_string())
 }
 
 #[cfg(test)]
@@ -220,6 +235,15 @@ mod tests {
             bind: (Node::Val("x".to_string()), Node::Int(5)),
             scope: Node::Add(Box::new(Node::Val("x".to_string())), Box::new(Node::Int(2))),
         }));
+        let actual = parse(&tokens).unwrap();
+        assert_eq!(expected, actual);
+    }
+
+    #[test]
+    fn parses_empty_list() {
+        // []
+        let tokens = vec![Token::Punct("[".to_string()), Token::Punct("]".to_string())];
+        let expected = Node::List;
         let actual = parse(&tokens).unwrap();
         assert_eq!(expected, actual);
     }
