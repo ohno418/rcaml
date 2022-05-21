@@ -75,7 +75,7 @@ mod tests {
 
     #[test]
     fn eval_existing_global_binding() {
-        let input = "foo ;;".to_string();
+        let input = "foo;;".to_string();
         let mut bounds = Bounds(HashMap::from([("foo".to_string(), 456)]));
         let expected = "- : int = 456";
         let actual = eval(input, &mut bounds).unwrap();
@@ -85,7 +85,7 @@ mod tests {
 
     #[test]
     fn eval_local_binding() {
-        let input = "let lv = 345 in lv + 2 ;;".to_string();
+        let input = "let lv = 345 in lv + 2;;".to_string();
         let mut bounds = Bounds::new();
         let expected = "- : int = 347";
         let actual = eval(input, &mut bounds).unwrap();
@@ -98,7 +98,7 @@ mod tests {
         let input = r#"
             let a = 1 in
             let b = 2 in
-            a ;;
+            a;;
         "#
         .to_string();
         let mut bounds = Bounds::new();
@@ -113,7 +113,7 @@ mod tests {
         let input = r#"
             let a = 1 in
             let b = 2 in
-            b ;;
+            b;;
         "#
         .to_string();
         let mut bounds = Bounds::new();
