@@ -7,7 +7,6 @@ use eval_ast::eval_ast;
 use lexer::tokenize;
 use parser::parse;
 
-// <program> ::= <expr> ";;"
 pub(crate) fn eval(input: String, bounds: &mut Bounds) -> Result<String, String> {
     // Extract an expression that precedes ";;".
     let expr = match input.find(";;") {
