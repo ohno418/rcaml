@@ -7,7 +7,7 @@ use read::{read, ReadError};
 use std::collections::HashMap;
 use ty::Ty;
 
-// bound values
+// global bound values
 #[derive(Clone, Debug, PartialEq)]
 struct Bounds(HashMap<String, Ty>);
 
