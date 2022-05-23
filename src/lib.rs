@@ -42,8 +42,6 @@ pub fn repl() -> Result<(), String> {
             Ok(output) => println!("{}", output),
             Err(err) => println!("Error: {}", err),
         }
-
-        println!("global values are: {:?}", bounds);
     }
 
     Ok(())
