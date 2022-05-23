@@ -15,12 +15,7 @@ pub(super) enum KwKind {
 pub(super) fn tokenize(input: &str) -> Result<Vec<Token>, String> {
     let mut tokens: Vec<Token> = vec![];
     let mut rest = input;
-    loop {
-        let c = match rest.chars().next() {
-            Some(c) => c,
-            None => break,
-        };
-
+    while let Some(c) = rest.chars().next() {
         // whitespaces
         if c.is_ascii_whitespace() {
             // skip white spaces

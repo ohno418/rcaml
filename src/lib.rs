@@ -32,7 +32,7 @@ pub fn repl() -> Result<(), String> {
         let input = match read() {
             Ok(input) => input,
             Err(ReadError::CtrlD) => {
-                println!("");
+                println!();
                 break;
             }
             Err(ReadError::Unknown) => return Err("failed to read an input".to_string()),

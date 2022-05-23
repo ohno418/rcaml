@@ -22,7 +22,7 @@ pub(super) struct LocalBindStruct {
 pub(super) fn parse(tokens: &[Token]) -> Result<Node, String> {
     let (node, rest) = parse_expr(tokens)?;
 
-    if rest.len() != 0 {
+    if !rest.is_empty() {
         return Err(format!("Found extra token: {:?}", rest));
     }
 
@@ -79,21 +79,18 @@ fn parse_bind(tokens: &[Token]) -> Result<(Node, &[Token]), String> {
 fn parse_add(tokens: &[Token]) -> Result<(Node, &[Token]), String> {
     let (mut node, mut rest) = parse_mul(tokens)?;
 
-    loop {
-        match rest.get(0) {
-            Some(Token::Punct(p)) => match &**p {
-                "+" => {
-                    let rhs;
-                    (rhs, rest) = parse_mul(&rest[1..])?;
-                    node = Node::Add(Box::new(node), Box::new(rhs));
-                }
-                "-" => {
-                    let rhs;
-                    (rhs, rest) = parse_mul(&rest[1..])?;
-                    node = Node::Sub(Box::new(node), Box::new(rhs));
-                }
-                _ => break,
-            },
+    while let Some(Token::Punct(p)) = rest.get(0) {
+        match &**p {
+            "+" => {
+                let rhs;
+                (rhs, rest) = parse_mul(&rest[1..])?;
+                node = Node::Add(Box::new(node), Box::new(rhs));
+            }
+            "-" => {
+                let rhs;
+                (rhs, rest) = parse_mul(&rest[1..])?;
+                node = Node::Sub(Box::new(node), Box::new(rhs));
+            }
             _ => break,
         }
     }
@@ -105,21 +102,18 @@ fn parse_add(tokens: &[Token]) -> Result<(Node, &[Token]), String> {
 fn parse_mul(tokens: &[Token]) -> Result<(Node, &[Token]), String> {
     let (mut node, mut rest) = parse_primary(tokens)?;
 
-    loop {
-        match rest.get(0) {
-            Some(Token::Punct(p)) => match &**p {
-                "*" => {
-                    let rhs;
-                    (rhs, rest) = parse_primary(&rest[1..])?;
-                    node = Node::Mul(Box::new(node), Box::new(rhs));
-                }
-                "/" => {
-                    let rhs;
-                    (rhs, rest) = parse_primary(&rest[1..])?;
-                    node = Node::Div(Box::new(node), Box::new(rhs));
-                }
-                _ => break,
-            },
+    while let Some(Token::Punct(p)) = rest.get(0) {
+        match &**p {
+            "*" => {
+                let rhs;
+                (rhs, rest) = parse_primary(&rest[1..])?;
+                node = Node::Mul(Box::new(node), Box::new(rhs));
+            }
+            "/" => {
+                let rhs;
+                (rhs, rest) = parse_primary(&rest[1..])?;
+                node = Node::Div(Box::new(node), Box::new(rhs));
+            }
             _ => break,
         }
     }
