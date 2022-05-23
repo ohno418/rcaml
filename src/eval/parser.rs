@@ -138,27 +138,36 @@ fn parse_list(tokens: &[Token]) -> Result<(Node, &[Token]), String> {
         Some(Token::Punct(p)) if p == "[" => &tokens[1..],
         _ => return Err("Require [ to parse a list".to_string()),
     };
-
     let list = {
         let mut lst: Vec<i64> = Vec::new();
+        let mut is_first = true;
         loop {
             match rest.get(0) {
                 Some(Token::Punct(p)) if p == "]" => {
                     rest = &rest[1..];
                     break;
                 }
-                // TODO
-                Some(Token::Punct(p)) if p == ";" => rest = &rest[1..],
+                _ => (),
+            }
+            // skip ;
+            if !is_first {
+                match rest.get(0) {
+                    Some(Token::Punct(p)) if p == ";" => rest = &rest[1..],
+                    _ => return Err("; is required as a delimiter".to_string()),
+                }
+            }
+            match rest.get(0) {
                 Some(Token::Int(int)) => {
                     lst.push(*int);
                     rest = &rest[1..];
+                    is_first = false;
                 }
                 _ => return Err("Failed to parse a list".to_string()),
             }
         }
-        lst
+        List::from(&lst)
     };
-    Ok((Node::List(List::from(&list)), rest))
+    Ok((Node::List(list), rest))
 }
 
 #[cfg(test)]
