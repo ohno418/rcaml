@@ -1,12 +1,12 @@
 use std::io;
 use std::io::Write;
 
-pub enum ReadError {
+pub(super) enum ReadError {
     CtrlD,
     Unknown,
 }
 
-pub fn read() -> Result<String, ReadError> {
+pub(super) fn read() -> Result<String, ReadError> {
     print!("# ");
     io::stdout().flush().expect("failed to flush");
 

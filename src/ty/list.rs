@@ -1,7 +1,7 @@
 use std::fmt;
 
 #[derive(Clone, Debug, PartialEq)]
-pub struct List(pub Option<i64>, pub Option<Box<List>>);
+pub(crate) struct List(pub Option<i64>, pub Option<Box<List>>);
 
 impl List {
     pub fn new() -> Self {
