@@ -2,10 +2,10 @@ mod eval;
 mod read;
 mod ty;
 
-use ty::Ty;
 use eval::eval;
 use read::{read, ReadError};
 use std::collections::HashMap;
+use ty::Ty;
 
 // bound values
 #[derive(Clone, Debug, PartialEq)]

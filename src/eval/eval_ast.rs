@@ -154,8 +154,8 @@ pub(super) fn eval_ast(ast: &Node, bounds: &mut Bounds) -> Result<Output, String
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::collections::HashMap;
     use crate::ty::ListStruct;
+    use std::collections::HashMap;
 
     #[test]
     fn eval_int() {

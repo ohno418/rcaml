@@ -23,8 +23,8 @@ pub(crate) fn eval(input: String, bounds: &mut Bounds) -> Result<String, String>
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::collections::HashMap;
     use crate::Ty;
+    use std::collections::HashMap;
 
     #[test]
     fn eval_integer_input() {
