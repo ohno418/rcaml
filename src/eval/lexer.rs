@@ -34,7 +34,7 @@ pub(super) fn tokenize(input: &str) -> Result<Vec<Token>, String> {
         // punctuators
         if c.is_ascii_punctuation() {
             match c {
-                '+' | '-' | '*' | '/' | '=' | '[' | ']' => {
+                '+' | '-' | '*' | '/' | '=' | '[' | ']' | ';' => {
                     tokens.push(Token::Punct(c.to_string()));
                     rest = &rest[1..];
                     continue;
@@ -166,6 +166,22 @@ mod tests {
     fn tokenizes_empty_list() {
         let input = "[]";
         let expected = vec![Token::Punct("[".to_string()), Token::Punct("]".to_string())];
+        let actual = tokenize(input).unwrap();
+        assert_eq!(expected, actual);
+    }
+
+    #[test]
+    fn tokenizes_list() {
+        let input = "[1; 2; 3]";
+        let expected = vec![
+            Token::Punct("[".to_string()),
+            Token::Int(1),
+            Token::Punct(";".to_string()),
+            Token::Int(2),
+            Token::Punct(";".to_string()),
+            Token::Int(3),
+            Token::Punct("]".to_string()),
+        ];
         let actual = tokenize(input).unwrap();
         assert_eq!(expected, actual);
     }

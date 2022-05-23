@@ -1,4 +1,7 @@
+mod list;
+
 use super::lexer::{KwKind, Token};
+pub use list::ListStruct;
 
 #[derive(Debug, PartialEq)]
 pub(super) enum Node {
@@ -7,7 +10,7 @@ pub(super) enum Node {
     Sub(Box<Node>, Box<Node>),       // -
     Mul(Box<Node>, Box<Node>),       // *
     Div(Box<Node>, Box<Node>),       // /
-    List,                            // list
+    List(ListStruct),                // list
     Val(String),                     // bound value
     Bind(Box<Node>, Box<Node>),      // global binding
     LocalBind(Box<LocalBindStruct>), // local binding
@@ -131,17 +134,33 @@ fn parse_primary(tokens: &[Token]) -> Result<(Node, &[Token]), String> {
     }
 }
 
-// <list> ::= "[]"
+// <list> ::= "[" (<int> (";" <int>)*)? "]"
 fn parse_list(tokens: &[Token]) -> Result<(Node, &[Token]), String> {
-    match tokens.get(0) {
-        Some(Token::Punct(p)) if p == "[" => match tokens.get(1) {
-            Some(Token::Punct(p)) if p == "]" => return Ok((Node::List, &tokens[2..])),
-            _ => (),
-        },
-        _ => (),
-    }
+    let mut rest = match tokens.get(0) {
+        Some(Token::Punct(p)) if p == "[" => &tokens[1..],
+        _ => return Err("Require [ to parse a list".to_string()),
+    };
 
-    Err("Failed to parse a list".to_string())
+    let list = {
+        let mut lst: Vec<i64> = Vec::new();
+        loop {
+            match rest.get(0) {
+                Some(Token::Punct(p)) if p == "]" => {
+                    rest = &rest[1..];
+                    break;
+                }
+                // TODO
+                Some(Token::Punct(p)) if p == ";" => rest = &rest[1..],
+                Some(Token::Int(int)) => {
+                    lst.push(*int);
+                    rest = &rest[1..];
+                }
+                _ => return Err("Failed to parse a list".to_string()),
+            }
+        }
+        lst
+    };
+    Ok((Node::List(ListStruct::from(&list)), rest))
 }
 
 #[cfg(test)]
@@ -237,7 +256,33 @@ mod tests {
     fn parses_empty_list() {
         // []
         let tokens = vec![Token::Punct("[".to_string()), Token::Punct("]".to_string())];
-        let expected = Node::List;
+        let expected = Node::List(ListStruct::new());
+        let actual = parse(&tokens).unwrap();
+        assert_eq!(expected, actual);
+    }
+
+    #[test]
+    fn parses_list() {
+        // [1; 2; 3]
+        let tokens = vec![
+            Token::Punct("[".to_string()),
+            Token::Int(1),
+            Token::Punct(";".to_string()),
+            Token::Int(2),
+            Token::Punct(";".to_string()),
+            Token::Int(3),
+            Token::Punct("]".to_string()),
+        ];
+        let expected = Node::List(ListStruct(
+            Some(1),
+            Some(Box::new(ListStruct(
+                Some(2),
+                Some(Box::new(ListStruct(
+                    Some(3),
+                    Some(Box::new(ListStruct(None, None))),
+                ))),
+            ))),
+        ));
         let actual = parse(&tokens).unwrap();
         assert_eq!(expected, actual);
     }

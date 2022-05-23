@@ -4,6 +4,7 @@ mod parser;
 
 use super::Bounds;
 use eval_ast::eval_ast;
+pub use eval_ast::Ty;
 use lexer::tokenize;
 use parser::parse;
 
@@ -59,27 +60,36 @@ mod tests {
         let expected = "val foo : int = 42";
         let actual = eval(input, &mut bounds).unwrap();
         assert_eq!(expected, actual);
-        assert_eq!(bounds, Bounds(HashMap::from([("foo".to_string(), 42)])),);
+        assert_eq!(
+            bounds,
+            Bounds(HashMap::from([("foo".to_string(), Ty::Int(42))]))
+        );
     }
 
     #[test]
     fn overwrites_existing_global_binding() {
         let input = "let foo = 123;;".to_string();
-        let mut bounds = Bounds(HashMap::from([("foo".to_string(), 42)]));
+        let mut bounds = Bounds(HashMap::from([("foo".to_string(), Ty::Int(42))]));
         let expected = "val foo : int = 123";
         let actual = eval(input, &mut bounds).unwrap();
         assert_eq!(expected, actual);
-        assert_eq!(bounds, Bounds(HashMap::from([("foo".to_string(), 123)])),);
+        assert_eq!(
+            bounds,
+            Bounds(HashMap::from([("foo".to_string(), Ty::Int(123))]))
+        );
     }
 
     #[test]
     fn eval_existing_global_binding() {
         let input = "foo;;".to_string();
-        let mut bounds = Bounds(HashMap::from([("foo".to_string(), 456)]));
+        let mut bounds = Bounds(HashMap::from([("foo".to_string(), Ty::Int(456))]));
         let expected = "- : int = 456";
         let actual = eval(input, &mut bounds).unwrap();
         assert_eq!(expected, actual);
-        assert_eq!(bounds, Bounds(HashMap::from([("foo".to_string(), 456)])),);
+        assert_eq!(
+            bounds,
+            Bounds(HashMap::from([("foo".to_string(), Ty::Int(456))]))
+        );
     }
 
     #[test]
@@ -127,6 +137,16 @@ mod tests {
         let input = "[];;".to_string();
         let mut bounds = Bounds::new();
         let expected = "- : int list = []";
+        let actual = eval(input, &mut bounds).unwrap();
+        assert_eq!(expected, actual);
+        assert_eq!(bounds, Bounds::new());
+    }
+
+    #[test]
+    fn eval_list() {
+        let input = "[1; 2; 3];;".to_string();
+        let mut bounds = Bounds::new();
+        let expected = "- : int list = [1; 2; 3]";
         let actual = eval(input, &mut bounds).unwrap();
         assert_eq!(expected, actual);
         assert_eq!(bounds, Bounds::new());
