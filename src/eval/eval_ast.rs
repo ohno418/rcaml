@@ -154,7 +154,7 @@ pub(super) fn eval_ast(ast: &Node, bounds: &mut Bounds) -> Result<Output, String
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::ty::ListStruct;
+    use crate::ty::List;
     use std::collections::HashMap;
 
     #[test]
@@ -291,11 +291,11 @@ mod tests {
     #[test]
     fn eval_empty_list() {
         // []
-        let ast = Node::List(ListStruct::new());
+        let ast = Node::List(List::new());
         let mut bounds = Bounds::new();
         let expected = Output {
             val: None,
-            ty: Ty::List(ListStruct::new()),
+            ty: Ty::List(List::new()),
         };
         let actual = eval_ast(&ast, &mut bounds).unwrap();
         assert_eq!(expected, actual);
@@ -305,14 +305,11 @@ mod tests {
     #[test]
     fn eval_list() {
         // [1; 2; 3]
-        let list = ListStruct(
+        let list = List(
             Some(1),
-            Some(Box::new(ListStruct(
+            Some(Box::new(List(
                 Some(2),
-                Some(Box::new(ListStruct(
-                    Some(3),
-                    Some(Box::new(ListStruct(None, None))),
-                ))),
+                Some(Box::new(List(Some(3), Some(Box::new(List(None, None)))))),
             ))),
         );
         let ast = Node::List(list.clone());
@@ -329,14 +326,11 @@ mod tests {
     #[test]
     fn eval_list_binding() {
         // let lst = [1; 2; 3]
-        let list = ListStruct(
+        let list = List(
             Some(1),
-            Some(Box::new(ListStruct(
+            Some(Box::new(List(
                 Some(2),
-                Some(Box::new(ListStruct(
-                    Some(3),
-                    Some(Box::new(ListStruct(None, None))),
-                ))),
+                Some(Box::new(List(Some(3), Some(Box::new(List(None, None)))))),
             ))),
         );
         let ast = Node::Bind(

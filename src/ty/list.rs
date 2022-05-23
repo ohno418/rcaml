@@ -1,10 +1,9 @@
 use std::fmt;
 
-// TODO: Rename
 #[derive(Clone, Debug, PartialEq)]
-pub struct ListStruct(pub Option<i64>, pub Option<Box<ListStruct>>);
+pub struct List(pub Option<i64>, pub Option<Box<List>>);
 
-impl ListStruct {
+impl List {
     pub fn new() -> Self {
         Self(None, None)
     }
@@ -15,9 +14,9 @@ impl ListStruct {
     }
 }
 
-impl From<&Vec<i64>> for ListStruct {
+impl From<&Vec<i64>> for List {
     fn from(list: &Vec<i64>) -> Self {
-        let mut lst = ListStruct::new();
+        let mut lst = List::new();
         for ele in list.iter().rev() {
             lst.cons(*ele);
         }
@@ -25,12 +24,12 @@ impl From<&Vec<i64>> for ListStruct {
     }
 }
 
-impl fmt::Display for ListStruct {
+impl fmt::Display for List {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "[")?;
         let mut iter = self;
         let mut is_first = true;
-        while let ListStruct(Some(head), Some(rest)) = iter {
+        while let List(Some(head), Some(rest)) = iter {
             if !is_first {
                 write!(f, "; ")?;
             }
@@ -48,28 +47,22 @@ mod tests {
 
     #[test]
     fn new_empty_list() {
-        assert_eq!(ListStruct(None, None), ListStruct::new(),);
+        assert_eq!(List(None, None), List::new(),);
     }
 
     #[test]
     fn cons_to_list() {
-        let mut lst = ListStruct::new();
-        assert_eq!(ListStruct(None, None), lst,);
+        let mut lst = List::new();
+        assert_eq!(List(None, None), lst,);
 
         lst.cons(1);
-        assert_eq!(
-            ListStruct(Some(1), Some(Box::new(ListStruct(None, None))),),
-            lst,
-        );
+        assert_eq!(List(Some(1), Some(Box::new(List(None, None))),), lst,);
 
         lst.cons(2);
         assert_eq!(
-            ListStruct(
+            List(
                 Some(2),
-                Some(Box::new(ListStruct(
-                    Some(1),
-                    Some(Box::new(ListStruct(None, None))),
-                ),)),
+                Some(Box::new(List(Some(1), Some(Box::new(List(None, None))),),)),
             ),
             lst,
         );
@@ -77,32 +70,26 @@ mod tests {
 
     #[test]
     fn from_collection() {
-        assert_eq!(ListStruct(None, None), ListStruct::from(&vec![]));
+        assert_eq!(List(None, None), List::from(&vec![]));
         assert_eq!(
-            ListStruct(
+            List(
                 Some(1),
-                Some(Box::new(ListStruct(
+                Some(Box::new(List(
                     Some(2),
-                    Some(Box::new(ListStruct(
-                        Some(3),
-                        Some(Box::new(ListStruct(None, None))),
-                    ),)),
+                    Some(Box::new(List(Some(3), Some(Box::new(List(None, None))),),)),
                 ),)),
             ),
-            ListStruct::from(&vec![1, 2, 3]),
+            List::from(&vec![1, 2, 3]),
         );
     }
 
     #[test]
     fn convert_to_string() {
-        let list = ListStruct(
+        let list = List(
             Some(1),
-            Some(Box::new(ListStruct(
+            Some(Box::new(List(
                 Some(2),
-                Some(Box::new(ListStruct(
-                    Some(3),
-                    Some(Box::new(ListStruct(None, None))),
-                ))),
+                Some(Box::new(List(Some(3), Some(Box::new(List(None, None)))))),
             ))),
         );
         assert_eq!(list.to_string(), "[1; 2; 3]",);

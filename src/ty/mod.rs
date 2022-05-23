@@ -1,9 +1,9 @@
 mod list;
 
-pub use list::ListStruct;
+pub use list::List;
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum Ty {
-    Int(i64),         // int
-    List(ListStruct), // list
+    Int(i64),   // int
+    List(List), // list
 }

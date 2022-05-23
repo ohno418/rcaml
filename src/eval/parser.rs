@@ -1,5 +1,5 @@
 use super::lexer::{KwKind, Token};
-use crate::ty::ListStruct;
+use crate::ty::List;
 
 #[derive(Debug, PartialEq)]
 pub(super) enum Node {
@@ -8,7 +8,7 @@ pub(super) enum Node {
     Sub(Box<Node>, Box<Node>),       // -
     Mul(Box<Node>, Box<Node>),       // *
     Div(Box<Node>, Box<Node>),       // /
-    List(ListStruct),                // list
+    List(List),                      // list
     Val(String),                     // bound value
     Bind(Box<Node>, Box<Node>),      // global binding
     LocalBind(Box<LocalBindStruct>), // local binding
@@ -158,7 +158,7 @@ fn parse_list(tokens: &[Token]) -> Result<(Node, &[Token]), String> {
         }
         lst
     };
-    Ok((Node::List(ListStruct::from(&list)), rest))
+    Ok((Node::List(List::from(&list)), rest))
 }
 
 #[cfg(test)]
@@ -254,7 +254,7 @@ mod tests {
     fn parses_empty_list() {
         // []
         let tokens = vec![Token::Punct("[".to_string()), Token::Punct("]".to_string())];
-        let expected = Node::List(ListStruct::new());
+        let expected = Node::List(List::new());
         let actual = parse(&tokens).unwrap();
         assert_eq!(expected, actual);
     }
@@ -271,14 +271,11 @@ mod tests {
             Token::Int(3),
             Token::Punct("]".to_string()),
         ];
-        let expected = Node::List(ListStruct(
+        let expected = Node::List(List(
             Some(1),
-            Some(Box::new(ListStruct(
+            Some(Box::new(List(
                 Some(2),
-                Some(Box::new(ListStruct(
-                    Some(3),
-                    Some(Box::new(ListStruct(None, None))),
-                ))),
+                Some(Box::new(List(Some(3), Some(Box::new(List(None, None)))))),
             ))),
         ));
         let actual = parse(&tokens).unwrap();
