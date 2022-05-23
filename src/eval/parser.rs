@@ -1,7 +1,5 @@
-mod list;
-
 use super::lexer::{KwKind, Token};
-pub use list::ListStruct;
+use crate::ty::ListStruct;
 
 #[derive(Debug, PartialEq)]
 pub(super) enum Node {
@@ -18,8 +16,8 @@ pub(super) enum Node {
 
 #[derive(Debug, PartialEq)]
 pub(super) struct LocalBindStruct {
-    pub(super) bind: (Node, Node), // Bind node representing e.g. `let x = 42` part
-    pub(super) scope: Node,        // expression node in scope, followed by `in`
+    pub bind: (Node, Node), // Bind node representing e.g. `let x = 42` part
+    pub scope: Node,        // expression node in scope, followed by `in`
 }
 
 pub(super) fn parse(tokens: &[Token]) -> Result<Node, String> {

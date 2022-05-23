@@ -1,5 +1,6 @@
 use std::fmt;
 
+// TODO: Rename
 #[derive(Clone, Debug, PartialEq)]
 pub struct ListStruct(pub Option<i64>, pub Option<Box<ListStruct>>);
 

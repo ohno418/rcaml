@@ -1,18 +1,11 @@
-use super::parser::{ListStruct, LocalBindStruct, Node};
-use super::Bounds;
+use super::parser::{LocalBindStruct, Node};
+use crate::{Bounds, Ty};
 use std::fmt;
 
 #[derive(Debug, PartialEq)]
-pub(crate) struct Output {
+pub(super) struct Output {
     val: Option<String>,
     ty: Ty,
-}
-
-// TODO: Rename to Value
-#[derive(Clone, Debug, PartialEq)]
-pub enum Ty {
-    Int(i64),         // int
-    List(ListStruct), // list
 }
 
 impl fmt::Display for Output {
@@ -162,6 +155,7 @@ pub(super) fn eval_ast(ast: &Node, bounds: &mut Bounds) -> Result<Output, String
 mod tests {
     use super::*;
     use std::collections::HashMap;
+    use crate::ty::ListStruct;
 
     #[test]
     fn eval_int() {

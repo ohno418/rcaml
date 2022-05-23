@@ -2,9 +2,8 @@ mod eval_ast;
 mod lexer;
 mod parser;
 
-use super::Bounds;
+use crate::Bounds;
 use eval_ast::eval_ast;
-pub use eval_ast::Ty;
 use lexer::tokenize;
 use parser::parse;
 
@@ -25,6 +24,7 @@ pub(crate) fn eval(input: String, bounds: &mut Bounds) -> Result<String, String>
 mod tests {
     use super::*;
     use std::collections::HashMap;
+    use crate::Ty;
 
     #[test]
     fn eval_integer_input() {

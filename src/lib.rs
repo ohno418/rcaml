@@ -1,7 +1,9 @@
 mod eval;
 mod read;
+mod ty;
 
-use eval::{eval, Ty};
+use ty::Ty;
+use eval::eval;
 use read::{read, ReadError};
 use std::collections::HashMap;
 
