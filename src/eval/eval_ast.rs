@@ -45,7 +45,7 @@ pub(super) fn eval_ast(ast: &Node, bounds: &mut Bounds) -> Result<Output, String
                 val: None,
                 ty: Ty::Int(l + r),
             }),
-            _ => unreachable!(),
+            _ => Err("This expression has a type other than int".to_string()),
         },
         Node::Sub(lhs, rhs) => match (eval_ast(lhs, bounds)?, eval_ast(rhs, bounds)?) {
             (
@@ -61,7 +61,7 @@ pub(super) fn eval_ast(ast: &Node, bounds: &mut Bounds) -> Result<Output, String
                 val: None,
                 ty: Ty::Int(l - r),
             }),
-            _ => unreachable!(),
+            _ => Err("This expression has a type other than int".to_string()),
         },
         Node::Mul(lhs, rhs) => match (eval_ast(lhs, bounds)?, eval_ast(rhs, bounds)?) {
             (
@@ -77,7 +77,7 @@ pub(super) fn eval_ast(ast: &Node, bounds: &mut Bounds) -> Result<Output, String
                 val: None,
                 ty: Ty::Int(l * r),
             }),
-            _ => unreachable!(),
+            _ => Err("This expression has a type other than int".to_string()),
         },
         Node::Div(lhs, rhs) => match (eval_ast(lhs, bounds)?, eval_ast(rhs, bounds)?) {
             (
@@ -93,7 +93,7 @@ pub(super) fn eval_ast(ast: &Node, bounds: &mut Bounds) -> Result<Output, String
                 val: None,
                 ty: Ty::Int(l / r),
             }),
-            _ => unreachable!(),
+            _ => Err("This expression has a type other than int".to_string()),
         },
         Node::List(list) => Ok(Output {
             val: None,
@@ -113,7 +113,7 @@ pub(super) fn eval_ast(ast: &Node, bounds: &mut Bounds) -> Result<Output, String
             };
             let value = match eval_ast(rhs, bounds)? {
                 Output { val: None, ty } => ty,
-                _ => unreachable!(),
+                _ => return Err("Syntax error".to_string()),
             };
             bounds.bind(name.clone(), value.clone());
             Ok(Output {
@@ -131,7 +131,7 @@ pub(super) fn eval_ast(ast: &Node, bounds: &mut Bounds) -> Result<Output, String
             };
             let value = match eval_ast(rhs, bounds)? {
                 Output { val: None, ty } => ty,
-                _ => unreachable!(),
+                _ => return Err("Syntax error".to_string()),
             };
             // Make new bound values from global bound values.
             let mut bounds_locally = bounds.clone();
@@ -348,5 +348,15 @@ mod tests {
             bounds,
             Bounds(HashMap::from([("lst".to_string(), Ty::List(list))]))
         );
+    }
+
+    #[test]
+    fn error_on_arithmetic_operation_for_not_int_pair() {
+        // [1; 2] + 3
+        let ast = Node::Add(
+            Box::new(Node::List(List::from(&vec![1, 2]))),
+            Box::new(Node::Int(3)),
+        );
+        assert!(eval_ast(&ast, &mut Bounds::new()).is_err());
     }
 }
