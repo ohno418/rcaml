@@ -8,8 +8,9 @@ pub(super) enum Token {
 
 #[derive(Debug, PartialEq)]
 pub(super) enum KwKind {
-    Let, // let
-    In,  // in
+    Let,  // let
+    In,   // in
+    True, // true
 }
 
 pub(super) fn tokenize(input: &str) -> Result<Vec<Token>, String> {
@@ -48,6 +49,7 @@ pub(super) fn tokenize(input: &str) -> Result<Vec<Token>, String> {
             let tok = match &*ident {
                 "let" => Token::Kw(KwKind::Let),
                 "in" => Token::Kw(KwKind::In),
+                "true" => Token::Kw(KwKind::True),
                 _ => Token::Ident(ident),
             };
             tokens.push(tok);
@@ -182,6 +184,14 @@ mod tests {
             Token::Int(3),
             Token::Punct("]".to_string()),
         ];
+        let actual = tokenize(input).unwrap();
+        assert_eq!(expected, actual);
+    }
+
+    #[test]
+    fn tokenizes_true() {
+        let input = "true";
+        let expected = vec![Token::Kw(KwKind::True)];
         let actual = tokenize(input).unwrap();
         assert_eq!(expected, actual);
     }

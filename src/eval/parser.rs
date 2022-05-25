@@ -8,6 +8,7 @@ pub(super) enum Node {
     Sub(Box<Node>, Box<Node>),       // -
     Mul(Box<Node>, Box<Node>),       // *
     Div(Box<Node>, Box<Node>),       // /
+    Bool(bool),                      // boolean
     List(List),                      // list
     Val(String),                     // bound value
     Bind(Box<Node>, Box<Node>),      // global binding
@@ -122,10 +123,11 @@ fn parse_mul(tokens: &[Token]) -> Result<(Node, &[Token]), String> {
     Ok((node, rest))
 }
 
-// <primary> ::= <int> | <val-name> | <list>
+// <primary> ::= <int> | <boolean> | <val-name> | <list>
 fn parse_primary(tokens: &[Token]) -> Result<(Node, &[Token]), String> {
     match tokens.get(0) {
         Some(Token::Int(int)) => Ok((Node::Int(*int), &tokens[1..])),
+        Some(Token::Kw(KwKind::True)) => Ok((Node::Bool(true), &tokens[1..])),
         Some(Token::Ident(name)) => Ok((Node::Val(name.clone()), &tokens[1..])),
         Some(Token::Punct(p)) if p == "[" => parse_list(tokens),
         _ => Err("Failed to parse a primary".to_string()),
@@ -287,6 +289,14 @@ mod tests {
                 Some(Box::new(List(Some(3), Some(Box::new(List(None, None)))))),
             ))),
         ));
+        let actual = parse(&tokens).unwrap();
+        assert_eq!(expected, actual);
+    }
+
+    #[test]
+    fn parses_true() {
+        let tokens = vec![Token::Kw(KwKind::True)];
+        let expected = Node::Bool(true);
         let actual = parse(&tokens).unwrap();
         assert_eq!(expected, actual);
     }

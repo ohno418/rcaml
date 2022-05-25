@@ -17,6 +17,7 @@ impl fmt::Display for Output {
         }
         match ty {
             Ty::Int(int) => write!(f, "int = {}", int),
+            Ty::Bool(b) => write!(f, "bool = {}", if *b { "true" } else { "false" }),
             Ty::List(list) => {
                 write!(f, "int list = ")?;
                 list.fmt(f)
@@ -95,6 +96,7 @@ pub(super) fn eval_ast(ast: &Node, bounds: &mut Bounds) -> Result<Output, String
             }),
             _ => Err("This expression has a type other than int".to_string()),
         },
+        Node::Bool(b) => Ok(Output { val: None, ty: Ty::Bool(*b) }),
         Node::List(list) => Ok(Output {
             val: None,
             ty: Ty::List(list.clone()),
@@ -358,5 +360,18 @@ mod tests {
             Box::new(Node::Int(3)),
         );
         assert!(eval_ast(&ast, &mut Bounds::new()).is_err());
+    }
+
+    #[test]
+    fn eval_true() {
+        // true
+        let ast = Node::Bool(true);
+        let mut bounds = Bounds::new();
+        let expected = Output {
+            val: None,
+            ty: Ty::Bool(true),
+        };
+        let actual = eval_ast(&ast, &mut bounds).unwrap();
+        assert_eq!(expected, actual);
     }
 }
