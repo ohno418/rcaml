@@ -162,13 +162,13 @@ mod tests {
         assert_eq!(bounds, Bounds::new());
     }
 
-    // #[test]
-    // fn eval_false() {
-    //     let input = "false;;".to_string();
-    //     let mut bounds = Bounds::new();
-    //     let expected = "- : bool = false";
-    //     let actual = eval(input, &mut bounds).unwrap();
-    //     assert_eq!(expected, actual);
-    //     assert_eq!(bounds, Bounds::new());
-    // }
+    #[test]
+    fn eval_false() {
+        let input = "false;;".to_string();
+        let mut bounds = Bounds::new();
+        let expected = "- : bool = false";
+        let actual = eval(input, &mut bounds).unwrap();
+        assert_eq!(expected, actual);
+        assert_eq!(bounds, Bounds::new());
+    }
 }

@@ -128,6 +128,7 @@ fn parse_primary(tokens: &[Token]) -> Result<(Node, &[Token]), String> {
     match tokens.get(0) {
         Some(Token::Int(int)) => Ok((Node::Int(*int), &tokens[1..])),
         Some(Token::Kw(KwKind::True)) => Ok((Node::Bool(true), &tokens[1..])),
+        Some(Token::Kw(KwKind::False)) => Ok((Node::Bool(false), &tokens[1..])),
         Some(Token::Ident(name)) => Ok((Node::Val(name.clone()), &tokens[1..])),
         Some(Token::Punct(p)) if p == "[" => parse_list(tokens),
         _ => Err("Failed to parse a primary".to_string()),
@@ -297,6 +298,14 @@ mod tests {
     fn parses_true() {
         let tokens = vec![Token::Kw(KwKind::True)];
         let expected = Node::Bool(true);
+        let actual = parse(&tokens).unwrap();
+        assert_eq!(expected, actual);
+    }
+
+    #[test]
+    fn parses_false() {
+        let tokens = vec![Token::Kw(KwKind::False)];
+        let expected = Node::Bool(false);
         let actual = parse(&tokens).unwrap();
         assert_eq!(expected, actual);
     }

@@ -11,6 +11,7 @@ pub(super) enum KwKind {
     Let,  // let
     In,   // in
     True, // true
+    False, // false
 }
 
 pub(super) fn tokenize(input: &str) -> Result<Vec<Token>, String> {
@@ -50,6 +51,7 @@ pub(super) fn tokenize(input: &str) -> Result<Vec<Token>, String> {
                 "let" => Token::Kw(KwKind::Let),
                 "in" => Token::Kw(KwKind::In),
                 "true" => Token::Kw(KwKind::True),
+                "false" => Token::Kw(KwKind::False),
                 _ => Token::Ident(ident),
             };
             tokens.push(tok);
@@ -192,6 +194,14 @@ mod tests {
     fn tokenizes_true() {
         let input = "true";
         let expected = vec![Token::Kw(KwKind::True)];
+        let actual = tokenize(input).unwrap();
+        assert_eq!(expected, actual);
+    }
+
+    #[test]
+    fn tokenizes_false() {
+        let input = "false";
+        let expected = vec![Token::Kw(KwKind::False)];
         let actual = tokenize(input).unwrap();
         assert_eq!(expected, actual);
     }
