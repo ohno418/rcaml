@@ -4,12 +4,13 @@ use crate::ty::List;
 #[derive(Debug, PartialEq)]
 pub(super) enum Node {
     Int(i64),                        // integer
+    Bool(bool),                      // boolean
+    List(List),                      // list
     Add(Box<Node>, Box<Node>),       // +
     Sub(Box<Node>, Box<Node>),       // -
     Mul(Box<Node>, Box<Node>),       // *
     Div(Box<Node>, Box<Node>),       // /
-    Bool(bool),                      // boolean
-    List(List),                      // list
+    Eql(Box<Node>, Box<Node>),       // ==
     Val(String),                     // bound value
     Bind(Box<Node>, Box<Node>),      // global binding
     LocalBind(Box<LocalBindStruct>), // local binding
@@ -100,24 +101,40 @@ fn parse_add(tokens: &[Token]) -> Result<(Node, &[Token]), String> {
     Ok((node, rest))
 }
 
-// <mul> ::= <primary> ("*" | "/" <primary>)*
+// <mul> ::= <equal> ("*" | "/" <equal>)*
 fn parse_mul(tokens: &[Token]) -> Result<(Node, &[Token]), String> {
-    let (mut node, mut rest) = parse_primary(tokens)?;
+    let (mut node, mut rest) = parse_equal(tokens)?;
 
     while let Some(Token::Punct(p)) = rest.get(0) {
         match &**p {
             "*" => {
                 let rhs;
-                (rhs, rest) = parse_primary(&rest[1..])?;
+                (rhs, rest) = parse_equal(&rest[1..])?;
                 node = Node::Mul(Box::new(node), Box::new(rhs));
             }
             "/" => {
                 let rhs;
-                (rhs, rest) = parse_primary(&rest[1..])?;
+                (rhs, rest) = parse_equal(&rest[1..])?;
                 node = Node::Div(Box::new(node), Box::new(rhs));
             }
             _ => break,
         }
+    }
+
+    Ok((node, rest))
+}
+
+// <equal> ::= <primary> ("==" <primary>)*
+fn parse_equal(tokens: &[Token]) -> Result<(Node, &[Token]), String> {
+    let (mut node, mut rest) = parse_primary(tokens)?;
+
+    while let Some(Token::Punct(p)) = rest.get(0) {
+        if p != "==" {
+            break;
+        }
+        let rhs;
+        (rhs, rest) = parse_primary(&rest[1..])?;
+        node = Node::Eql(Box::new(node), Box::new(rhs));
     }
 
     Ok((node, rest))
@@ -306,6 +323,14 @@ mod tests {
     fn parses_false() {
         let tokens = vec![Token::Kw(KwKind::False)];
         let expected = Node::Bool(false);
+        let actual = parse(&tokens).unwrap();
+        assert_eq!(expected, actual);
+    }
+
+    #[test]
+    fn parses_equal() {
+        let tokens = vec![Token::Int(2), Token::Punct("==".to_string()), Token::Int(3)];
+        let expected = Node::Eql(Box::new(Node::Int(2)), Box::new(Node::Int(3)));
         let actual = parse(&tokens).unwrap();
         assert_eq!(expected, actual);
     }

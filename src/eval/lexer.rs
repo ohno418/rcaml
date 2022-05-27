@@ -8,9 +8,9 @@ pub(super) enum Token {
 
 #[derive(Debug, PartialEq)]
 pub(super) enum KwKind {
-    Let,  // let
-    In,   // in
-    True, // true
+    Let,   // let
+    In,    // in
+    True,  // true
     False, // false
 }
 
@@ -35,6 +35,12 @@ pub(super) fn tokenize(input: &str) -> Result<Vec<Token>, String> {
 
         // punctuators
         if c.is_ascii_punctuation() {
+            if rest.starts_with("==") {
+                tokens.push(Token::Punct("==".to_string()));
+                rest = &rest[3..];
+                continue;
+            }
+
             match c {
                 '+' | '-' | '*' | '/' | '=' | '[' | ']' | ';' => {
                     tokens.push(Token::Punct(c.to_string()));
@@ -202,6 +208,14 @@ mod tests {
     fn tokenizes_false() {
         let input = "false";
         let expected = vec![Token::Kw(KwKind::False)];
+        let actual = tokenize(input).unwrap();
+        assert_eq!(expected, actual);
+    }
+
+    #[test]
+    fn tokenizes_equal() {
+        let input = "2 == 3";
+        let expected = vec![Token::Int(2), Token::Punct("==".to_string()), Token::Int(3)];
         let actual = tokenize(input).unwrap();
         assert_eq!(expected, actual);
     }
