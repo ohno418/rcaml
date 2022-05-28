@@ -17,7 +17,7 @@ pub(super) enum KwKind {
 pub(super) fn tokenize(input: &str) -> Result<Vec<Token>, String> {
     let mut tokens: Vec<Token> = vec![];
     let mut rest = input;
-    while let Some(c) = rest.chars().next() {
+    'outer: while let Some(c) = rest.chars().next() {
         // whitespaces
         if c.is_ascii_whitespace() {
             // skip white spaces
@@ -35,10 +35,12 @@ pub(super) fn tokenize(input: &str) -> Result<Vec<Token>, String> {
 
         // punctuators
         if c.is_ascii_punctuation() {
-            if rest.starts_with("==") {
-                tokens.push(Token::Punct("==".to_string()));
-                rest = &rest[3..];
-                continue;
+            for p in &["==", "!="] {
+                if rest.starts_with(p) {
+                    tokens.push(Token::Punct(p.to_string()));
+                    rest = &rest[p.len()..];
+                    continue 'outer;
+                }
             }
 
             match c {
@@ -216,6 +218,14 @@ mod tests {
     fn tokenizes_equal() {
         let input = "2 == 3";
         let expected = vec![Token::Int(2), Token::Punct("==".to_string()), Token::Int(3)];
+        let actual = tokenize(input).unwrap();
+        assert_eq!(expected, actual);
+    }
+
+    #[test]
+    fn tokenizes_not_equal() {
+        let input = "2 != 3";
+        let expected = vec![Token::Int(2), Token::Punct("!=".to_string()), Token::Int(3)];
         let actual = tokenize(input).unwrap();
         assert_eq!(expected, actual);
     }

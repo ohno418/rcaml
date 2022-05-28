@@ -191,4 +191,24 @@ mod tests {
         assert_eq!(expected, actual);
         assert_eq!(bounds, Bounds::new());
     }
+
+    #[test]
+    fn eval_not_equal_between_int_1() {
+        let input = "2 != 3;;".to_string();
+        let mut bounds = Bounds::new();
+        let expected = "- : bool = true";
+        let actual = eval(input, &mut bounds).unwrap();
+        assert_eq!(expected, actual);
+        assert_eq!(bounds, Bounds::new());
+    }
+
+    #[test]
+    fn eval_not_equal_between_int_2() {
+        let input = "3 != 3;;".to_string();
+        let mut bounds = Bounds::new();
+        let expected = "- : bool = false";
+        let actual = eval(input, &mut bounds).unwrap();
+        assert_eq!(expected, actual);
+        assert_eq!(bounds, Bounds::new());
+    }
 }

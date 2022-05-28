@@ -11,6 +11,7 @@ pub(super) enum Node {
     Mul(Box<Node>, Box<Node>),       // *
     Div(Box<Node>, Box<Node>),       // /
     Eql(Box<Node>, Box<Node>),       // ==
+    Neql(Box<Node>, Box<Node>),      // !=
     Val(String),                     // bound value
     Bind(Box<Node>, Box<Node>),      // global binding
     LocalBind(Box<LocalBindStruct>), // local binding
@@ -124,17 +125,26 @@ fn parse_mul(tokens: &[Token]) -> Result<(Node, &[Token]), String> {
     Ok((node, rest))
 }
 
-// <equal> ::= <primary> ("==" <primary>)*
+// <equal> ::= <primary> (("==" | "!=") <primary>)*
 fn parse_equal(tokens: &[Token]) -> Result<(Node, &[Token]), String> {
     let (mut node, mut rest) = parse_primary(tokens)?;
 
     while let Some(Token::Punct(p)) = rest.get(0) {
-        if p != "==" {
-            break;
+        if p == "==" {
+            let rhs;
+            (rhs, rest) = parse_primary(&rest[1..])?;
+            node = Node::Eql(Box::new(node), Box::new(rhs));
+            continue;
         }
-        let rhs;
-        (rhs, rest) = parse_primary(&rest[1..])?;
-        node = Node::Eql(Box::new(node), Box::new(rhs));
+
+        if p == "!=" {
+            let rhs;
+            (rhs, rest) = parse_primary(&rest[1..])?;
+            node = Node::Neql(Box::new(node), Box::new(rhs));
+            continue;
+        }
+
+        break;
     }
 
     Ok((node, rest))
@@ -331,6 +341,14 @@ mod tests {
     fn parses_equal() {
         let tokens = vec![Token::Int(2), Token::Punct("==".to_string()), Token::Int(3)];
         let expected = Node::Eql(Box::new(Node::Int(2)), Box::new(Node::Int(3)));
+        let actual = parse(&tokens).unwrap();
+        assert_eq!(expected, actual);
+    }
+
+    #[test]
+    fn parses_not_equal() {
+        let tokens = vec![Token::Int(2), Token::Punct("!=".to_string()), Token::Int(3)];
+        let expected = Node::Neql(Box::new(Node::Int(2)), Box::new(Node::Int(3)));
         let actual = parse(&tokens).unwrap();
         assert_eq!(expected, actual);
     }

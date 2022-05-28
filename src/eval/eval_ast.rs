@@ -126,6 +126,28 @@ pub(super) fn eval_ast(ast: &Node, bounds: &mut Bounds) -> Result<Output, String
             }
             Err("Syntax error".to_string())
         }
+        Node::Neql(lhs, rhs) => {
+            if let (Output { val: None, ty: lty }, Output { val: None, ty: rty }) =
+                (eval_ast(lhs, bounds)?, eval_ast(rhs, bounds)?)
+            {
+                match (lty, rty) {
+                    (Ty::Int(l), Ty::Int(r)) => {
+                        return Ok(Output {
+                            val: None,
+                            ty: Ty::Bool(l != r),
+                        })
+                    }
+                    (Ty::Bool(l), Ty::Bool(r)) => {
+                        return Ok(Output {
+                            val: None,
+                            ty: Ty::Bool(l != r),
+                        })
+                    }
+                    _ => (),
+                }
+            }
+            Err("Syntax error".to_string())
+        }
         Node::Val(name) => match bounds.get(name) {
             Some(value) => Ok(Output {
                 val: None,
@@ -447,6 +469,32 @@ mod tests {
         let expected = Output {
             val: None,
             ty: Ty::Bool(true),
+        };
+        let actual = eval_ast(&ast, &mut bounds).unwrap();
+        assert_eq!(expected, actual);
+    }
+
+    #[test]
+    fn eval_not_equal_1() {
+        // 2 != 3
+        let ast = Node::Neql(Box::new(Node::Int(2)), Box::new(Node::Int(3)));
+        let mut bounds = Bounds::new();
+        let expected = Output {
+            val: None,
+            ty: Ty::Bool(true),
+        };
+        let actual = eval_ast(&ast, &mut bounds).unwrap();
+        assert_eq!(expected, actual);
+    }
+
+    #[test]
+    fn eval_not_equal_2() {
+        // 3 != 3
+        let ast = Node::Neql(Box::new(Node::Int(3)), Box::new(Node::Int(3)));
+        let mut bounds = Bounds::new();
+        let expected = Output {
+            val: None,
+            ty: Ty::Bool(false),
         };
         let actual = eval_ast(&ast, &mut bounds).unwrap();
         assert_eq!(expected, actual);
