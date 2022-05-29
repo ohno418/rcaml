@@ -46,9 +46,9 @@ mod tests {
 
     #[test]
     fn eval_arithmetic_expr() {
-        let input = "2+3*4+5-6/2;;".to_string();
+        let input = "2+3*4+5-6/2+(3-1)*2;;".to_string();
         let mut bounds = Bounds::new();
-        let expected = "- : int = 16";
+        let expected = "- : int = 20";
         let actual = eval(input, &mut bounds).unwrap();
         assert_eq!(expected, actual);
     }

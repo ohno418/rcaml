@@ -150,7 +150,7 @@ fn parse_equal(tokens: &[Token]) -> Result<(Node, &[Token]), String> {
     Ok((node, rest))
 }
 
-// <primary> ::= <int> | <boolean> | <val-name> | <list>
+// <primary> ::= <int> | <boolean> | <val-name> | <list> | "(" <expr> ")"
 fn parse_primary(tokens: &[Token]) -> Result<(Node, &[Token]), String> {
     match tokens.get(0) {
         Some(Token::Int(int)) => Ok((Node::Int(*int), &tokens[1..])),
@@ -158,6 +158,13 @@ fn parse_primary(tokens: &[Token]) -> Result<(Node, &[Token]), String> {
         Some(Token::Kw(KwKind::False)) => Ok((Node::Bool(false), &tokens[1..])),
         Some(Token::Ident(name)) => Ok((Node::Val(name.clone()), &tokens[1..])),
         Some(Token::Punct(p)) if p == "[" => parse_list(tokens),
+        Some(Token::Punct(p)) if p == "(" => {
+            let (expr, rest) = parse_expr(&tokens[1..])?;
+            match rest.get(0) {
+                Some(Token::Punct(p)) if p == ")" => Ok((expr, &rest[1..])),
+                _ => Err("expected (".to_string()),
+            }
+        }
         _ => Err("Failed to parse a primary".to_string()),
     }
 }
@@ -214,7 +221,7 @@ mod tests {
 
     #[test]
     fn parses_arithmetic_expr() {
-        // 2+3*4+5-6/2
+        // 2+3*4+5-6/2+(3-1)*2
         let tokens = vec![
             Token::Int(2),
             Token::Punct("+".to_string()),
@@ -227,16 +234,30 @@ mod tests {
             Token::Int(6),
             Token::Punct("/".to_string()),
             Token::Int(2),
+            Token::Punct("+".to_string()),
+            Token::Punct("(".to_string()),
+            Token::Int(3),
+            Token::Punct("-".to_string()),
+            Token::Int(1),
+            Token::Punct(")".to_string()),
+            Token::Punct("*".to_string()),
+            Token::Int(2),
         ];
-        let expected = Node::Sub(
-            Box::new(Node::Add(
+        let expected = Node::Add(
+            Box::new(Node::Sub(
                 Box::new(Node::Add(
-                    Box::new(Node::Int(2)),
-                    Box::new(Node::Mul(Box::new(Node::Int(3)), Box::new(Node::Int(4)))),
+                    Box::new(Node::Add(
+                        Box::new(Node::Int(2)),
+                        Box::new(Node::Mul(Box::new(Node::Int(3)), Box::new(Node::Int(4)))),
+                    )),
+                    Box::new(Node::Int(5)),
                 )),
-                Box::new(Node::Int(5)),
+                Box::new(Node::Div(Box::new(Node::Int(6)), Box::new(Node::Int(2)))),
             )),
-            Box::new(Node::Div(Box::new(Node::Int(6)), Box::new(Node::Int(2)))),
+            Box::new(Node::Mul(
+                Box::new(Node::Sub(Box::new(Node::Int(3)), Box::new(Node::Int(1)))),
+                Box::new(Node::Int(2)),
+            )),
         );
         let actual = parse(&tokens).unwrap();
         assert_eq!(expected, actual);

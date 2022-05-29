@@ -44,7 +44,7 @@ pub(super) fn tokenize(input: &str) -> Result<Vec<Token>, String> {
             }
 
             match c {
-                '+' | '-' | '*' | '/' | '=' | '[' | ']' | ';' => {
+                '+' | '-' | '*' | '/' | '=' | '[' | ']' | ';' | '(' | ')' => {
                     tokens.push(Token::Punct(c.to_string()));
                     rest = &rest[1..];
                     continue;
@@ -128,7 +128,7 @@ mod tests {
 
     #[test]
     fn tokenizes_arithmetic_expr() {
-        let input = "2+3*4+5-6/2";
+        let input = "2+3*4+5-6/2+(3-1)*2";
         let expected = vec![
             Token::Int(2),
             Token::Punct("+".to_string()),
@@ -140,6 +140,14 @@ mod tests {
             Token::Punct("-".to_string()),
             Token::Int(6),
             Token::Punct("/".to_string()),
+            Token::Int(2),
+            Token::Punct("+".to_string()),
+            Token::Punct("(".to_string()),
+            Token::Int(3),
+            Token::Punct("-".to_string()),
+            Token::Int(1),
+            Token::Punct(")".to_string()),
+            Token::Punct("*".to_string()),
             Token::Int(2),
         ];
         let actual = tokenize(input).unwrap();
