@@ -162,7 +162,7 @@ fn parse_primary(tokens: &[Token]) -> Result<(Node, &[Token]), String> {
             let (expr, rest) = parse_expr(&tokens[1..])?;
             match rest.get(0) {
                 Some(Token::Punct(p)) if p == ")" => Ok((expr, &rest[1..])),
-                _ => Err("expected (".to_string()),
+                _ => Err("expected )".to_string()),
             }
         }
         _ => Err("Failed to parse a primary".to_string()),
