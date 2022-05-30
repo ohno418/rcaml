@@ -40,7 +40,7 @@ pub fn repl() -> Result<(), String> {
             Err(ReadError::Unknown) => return Err("failed to read an input".to_string()),
         };
 
-        match eval(input, &mut bounds) {
+        match eval(&input, &mut bounds) {
             Ok(output) => println!("{}", output),
             Err(err) => println!("Error: {}", err),
         }
