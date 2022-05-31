@@ -12,7 +12,7 @@ pub(super) enum Node {
     Div(Box<Node>, Box<Node>),       // /
     Eql(Box<Node>, Box<Node>),       // ==
     Neql(Box<Node>, Box<Node>),      // !=
-    Val(String),                     // bound value
+    Ident(String),                   // identifier
     Bind(Box<Node>, Box<Node>),      // global binding
     LocalBind(Box<LocalBindStruct>), // local binding
 }
@@ -66,13 +66,16 @@ fn parse_bind(tokens: &[Token]) -> Result<(Node, &[Token]), String> {
                     (expr, rest) = parse_expr(&rest[1..])?;
                     Ok((
                         Node::LocalBind(Box::new(LocalBindStruct {
-                            bind: (Node::Val(ident), rhs),
+                            bind: (Node::Ident(ident), rhs),
                             scope: expr,
                         })),
                         rest,
                     ))
                 }
-                _ => Ok((Node::Bind(Box::new(Node::Val(ident)), Box::new(rhs)), rest)),
+                _ => Ok((
+                    Node::Bind(Box::new(Node::Ident(ident)), Box::new(rhs)),
+                    rest,
+                )),
             }
         }
         _ => parse_add(tokens),
@@ -156,7 +159,7 @@ fn parse_primary(tokens: &[Token]) -> Result<(Node, &[Token]), String> {
         Some(Token::Int(int)) => Ok((Node::Int(*int), &tokens[1..])),
         Some(Token::Kw(KwKind::True)) => Ok((Node::Bool(true), &tokens[1..])),
         Some(Token::Kw(KwKind::False)) => Ok((Node::Bool(false), &tokens[1..])),
-        Some(Token::Ident(name)) => Ok((Node::Val(name.clone()), &tokens[1..])),
+        Some(Token::Ident(name)) => Ok((Node::Ident(name.clone()), &tokens[1..])),
         Some(Token::Punct(p)) if p == "[" => parse_list(tokens),
         Some(Token::Punct(p)) if p == "(" => {
             let (expr, rest) = parse_expr(&tokens[1..])?;
@@ -273,7 +276,7 @@ mod tests {
             Token::Int(123),
         ];
         let expected = Node::Bind(
-            Box::new(Node::Val("foo".to_string())),
+            Box::new(Node::Ident("foo".to_string())),
             Box::new(Node::Int(123)),
         );
         let actual = parse(&tokens).unwrap();
@@ -284,7 +287,7 @@ mod tests {
     fn parses_global_value_eval() {
         // foo
         let tokens = vec![Token::Ident("foo".to_string())];
-        let expected = Node::Val("foo".to_string());
+        let expected = Node::Ident("foo".to_string());
         let actual = parse(&tokens).unwrap();
         assert_eq!(expected, actual);
     }
@@ -303,8 +306,11 @@ mod tests {
             Token::Int(2),
         ];
         let expected = Node::LocalBind(Box::new(LocalBindStruct {
-            bind: (Node::Val("x".to_string()), Node::Int(5)),
-            scope: Node::Add(Box::new(Node::Val("x".to_string())), Box::new(Node::Int(2))),
+            bind: (Node::Ident("x".to_string()), Node::Int(5)),
+            scope: Node::Add(
+                Box::new(Node::Ident("x".to_string())),
+                Box::new(Node::Int(2)),
+            ),
         }));
         let actual = parse(&tokens).unwrap();
         assert_eq!(expected, actual);
