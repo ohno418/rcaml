@@ -261,9 +261,10 @@ mod tests {
     #[test]
     fn eval_global_binding() {
         // let foo = 123
-        let ast = Node::Bind(Box::new(
-            BindStruct { name: Node::Ident("foo".to_string()), expr: Node::Int(123) },
-        ));
+        let ast = Node::Bind(Box::new(BindStruct {
+            name: Node::Ident("foo".to_string()),
+            expr: Node::Int(123),
+        }));
         let mut bounds = Bounds::new();
         let expected = Output {
             name: Some("foo".to_string()),
@@ -280,9 +281,10 @@ mod tests {
     #[test]
     fn overwrites_existing_global_binding() {
         // let foo = 123
-        let ast = Node::Bind(Box::new(
-            BindStruct { name: Node::Ident("foo".to_string()), expr: Node::Int(987) },
-        ));
+        let ast = Node::Bind(Box::new(BindStruct {
+            name: Node::Ident("foo".to_string()),
+            expr: Node::Int(987),
+        }));
         let mut bounds = Bounds::new();
         let expected = Output {
             name: Some("foo".to_string()),
@@ -317,7 +319,10 @@ mod tests {
     fn eval_local_binding() {
         // let x = 5 in x + 2
         let ast = Node::LocalBind(Box::new(LocalBindStruct {
-            bind: BindStruct { name: Node::Ident("x".to_string()), expr: Node::Int(5) },
+            bind: BindStruct {
+                name: Node::Ident("x".to_string()),
+                expr: Node::Int(5),
+            },
             scope: Node::Add(
                 Box::new(Node::Ident("x".to_string())),
                 Box::new(Node::Int(2)),
@@ -337,7 +342,10 @@ mod tests {
     fn shadow_global_binding_with_local_binding() {
         // let foo = 5 in foo + 2
         let ast = Node::LocalBind(Box::new(LocalBindStruct {
-            bind: BindStruct { name: Node::Ident("foo".to_string()), expr: Node::Int(5) },
+            bind: BindStruct {
+                name: Node::Ident("foo".to_string()),
+                expr: Node::Int(5),
+            },
             scope: Node::Add(
                 Box::new(Node::Ident("foo".to_string())),
                 Box::new(Node::Int(2)),
@@ -401,12 +409,10 @@ mod tests {
                 Some(Box::new(List(Some(3), Some(Box::new(List(None, None)))))),
             ))),
         );
-        let ast = Node::Bind(Box::new(
-                BindStruct {
-                    name: Node::Ident("lst".to_string()),
-                    expr: Node::List(list.clone()),
-                }
-        ));
+        let ast = Node::Bind(Box::new(BindStruct {
+            name: Node::Ident("lst".to_string()),
+            expr: Node::List(list.clone()),
+        }));
         let mut bounds = Bounds::new();
         let expected = Output {
             name: Some("lst".to_string()),

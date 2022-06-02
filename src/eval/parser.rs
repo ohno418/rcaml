@@ -27,7 +27,7 @@ pub(super) struct BindStruct {
 #[derive(Debug, PartialEq)]
 pub(super) struct LocalBindStruct {
     pub bind: BindStruct,
-    pub scope: Node,      // expression node in scope, followed by `in`
+    pub scope: Node, // expression node in scope, followed by `in`
 }
 
 pub(super) fn parse(tokens: &[Token]) -> Result<Node, String> {
@@ -73,14 +73,20 @@ fn parse_bind(tokens: &[Token]) -> Result<(Node, &[Token]), String> {
                     (expr, rest) = parse_expr(&rest[1..])?;
                     Ok((
                         Node::LocalBind(Box::new(LocalBindStruct {
-                            bind: BindStruct { name: Node::Ident(ident), expr: rhs },
+                            bind: BindStruct {
+                                name: Node::Ident(ident),
+                                expr: rhs,
+                            },
                             scope: expr,
                         })),
                         rest,
                     ))
                 }
                 _ => Ok((
-                    Node::Bind(Box::new(BindStruct { name: Node::Ident(ident), expr: rhs })),
+                    Node::Bind(Box::new(BindStruct {
+                        name: Node::Ident(ident),
+                        expr: rhs,
+                    })),
                     rest,
                 )),
             }
@@ -282,12 +288,10 @@ mod tests {
             Token::Punct("=".to_string()),
             Token::Int(123),
         ];
-        let expected = Node::Bind(
-            Box::new(BindStruct {
-                name: Node::Ident("foo".to_string()),
-                expr: Node::Int(123),
-            })
-        );
+        let expected = Node::Bind(Box::new(BindStruct {
+            name: Node::Ident("foo".to_string()),
+            expr: Node::Int(123),
+        }));
         let actual = parse(&tokens).unwrap();
         assert_eq!(expected, actual);
     }
@@ -315,7 +319,10 @@ mod tests {
             Token::Int(2),
         ];
         let expected = Node::LocalBind(Box::new(LocalBindStruct {
-            bind: BindStruct { name: Node::Ident("x".to_string()), expr: Node::Int(5) },
+            bind: BindStruct {
+                name: Node::Ident("x".to_string()),
+                expr: Node::Int(5),
+            },
             scope: Node::Add(
                 Box::new(Node::Ident("x".to_string())),
                 Box::new(Node::Int(2)),
