@@ -13,14 +13,21 @@ pub(super) enum Node {
     Eql(Box<Node>, Box<Node>),       // ==
     Neql(Box<Node>, Box<Node>),      // !=
     Ident(String),                   // identifier
-    Bind(Box<Node>, Box<Node>),      // global binding
+    Bind(Box<BindStruct>),           // global binding
     LocalBind(Box<LocalBindStruct>), // local binding
 }
 
 #[derive(Debug, PartialEq)]
+pub(super) struct BindStruct {
+    pub name: Node,
+    // args
+    pub expr: Node,
+}
+
+#[derive(Debug, PartialEq)]
 pub(super) struct LocalBindStruct {
-    pub bind: (Node, Node), // Bind node representing e.g. `let x = 42` part
-    pub scope: Node,        // expression node in scope, followed by `in`
+    pub bind: BindStruct,
+    pub scope: Node,      // expression node in scope, followed by `in`
 }
 
 pub(super) fn parse(tokens: &[Token]) -> Result<Node, String> {
@@ -66,14 +73,14 @@ fn parse_bind(tokens: &[Token]) -> Result<(Node, &[Token]), String> {
                     (expr, rest) = parse_expr(&rest[1..])?;
                     Ok((
                         Node::LocalBind(Box::new(LocalBindStruct {
-                            bind: (Node::Ident(ident), rhs),
+                            bind: BindStruct { name: Node::Ident(ident), expr: rhs },
                             scope: expr,
                         })),
                         rest,
                     ))
                 }
                 _ => Ok((
-                    Node::Bind(Box::new(Node::Ident(ident)), Box::new(rhs)),
+                    Node::Bind(Box::new(BindStruct { name: Node::Ident(ident), expr: rhs })),
                     rest,
                 )),
             }
@@ -276,8 +283,10 @@ mod tests {
             Token::Int(123),
         ];
         let expected = Node::Bind(
-            Box::new(Node::Ident("foo".to_string())),
-            Box::new(Node::Int(123)),
+            Box::new(BindStruct {
+                name: Node::Ident("foo".to_string()),
+                expr: Node::Int(123),
+            })
         );
         let actual = parse(&tokens).unwrap();
         assert_eq!(expected, actual);
@@ -306,7 +315,7 @@ mod tests {
             Token::Int(2),
         ];
         let expected = Node::LocalBind(Box::new(LocalBindStruct {
-            bind: (Node::Ident("x".to_string()), Node::Int(5)),
+            bind: BindStruct { name: Node::Ident("x".to_string()), expr: Node::Int(5) },
             scope: Node::Add(
                 Box::new(Node::Ident("x".to_string())),
                 Box::new(Node::Int(2)),

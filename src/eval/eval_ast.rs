@@ -1,4 +1,4 @@
-use super::parser::{LocalBindStruct, Node};
+use super::parser::{BindStruct, LocalBindStruct, Node};
 use crate::{Bounds, Ty};
 use std::fmt;
 
@@ -172,12 +172,13 @@ pub(super) fn eval_ast(ast: &Node, bounds: &mut Bounds) -> Result<Output, String
             }),
             None => Err(format!("Unbound value {}", name)),
         },
-        Node::Bind(lhs, rhs) => {
-            let name = match &**lhs {
+        Node::Bind(bind) => {
+            let BindStruct { name, expr } = &**bind;
+            let name = match name {
                 Node::Ident(name) => name.clone(),
                 _ => return Err("Expected a value name".to_string()),
             };
-            let value = match eval_ast(rhs, bounds)? {
+            let value = match eval_ast(expr, bounds)? {
                 Output { name: None, ty } => ty,
                 _ => return Err("Syntax error".to_string()),
             };
@@ -190,12 +191,12 @@ pub(super) fn eval_ast(ast: &Node, bounds: &mut Bounds) -> Result<Output, String
         Node::LocalBind(local_bind) => {
             let LocalBindStruct { bind, scope } = &**local_bind;
             // Eval local binding.
-            let (lhs, rhs) = bind;
-            let name = match lhs {
+            let BindStruct { name, expr } = &*bind;
+            let name = match name {
                 Node::Ident(name) => name.clone(),
                 _ => return Err("Expected a value name".to_string()),
             };
-            let value = match eval_ast(rhs, bounds)? {
+            let value = match eval_ast(expr, bounds)? {
                 Output { name: None, ty } => ty,
                 _ => return Err("Syntax error".to_string()),
             };
@@ -260,10 +261,9 @@ mod tests {
     #[test]
     fn eval_global_binding() {
         // let foo = 123
-        let ast = Node::Bind(
-            Box::new(Node::Ident("foo".to_string())),
-            Box::new(Node::Int(123)),
-        );
+        let ast = Node::Bind(Box::new(
+            BindStruct { name: Node::Ident("foo".to_string()), expr: Node::Int(123) },
+        ));
         let mut bounds = Bounds::new();
         let expected = Output {
             name: Some("foo".to_string()),
@@ -280,10 +280,9 @@ mod tests {
     #[test]
     fn overwrites_existing_global_binding() {
         // let foo = 123
-        let ast = Node::Bind(
-            Box::new(Node::Ident("foo".to_string())),
-            Box::new(Node::Int(987)),
-        );
+        let ast = Node::Bind(Box::new(
+            BindStruct { name: Node::Ident("foo".to_string()), expr: Node::Int(987) },
+        ));
         let mut bounds = Bounds::new();
         let expected = Output {
             name: Some("foo".to_string()),
@@ -318,7 +317,7 @@ mod tests {
     fn eval_local_binding() {
         // let x = 5 in x + 2
         let ast = Node::LocalBind(Box::new(LocalBindStruct {
-            bind: (Node::Ident("x".to_string()), Node::Int(5)),
+            bind: BindStruct { name: Node::Ident("x".to_string()), expr: Node::Int(5) },
             scope: Node::Add(
                 Box::new(Node::Ident("x".to_string())),
                 Box::new(Node::Int(2)),
@@ -338,7 +337,7 @@ mod tests {
     fn shadow_global_binding_with_local_binding() {
         // let foo = 5 in foo + 2
         let ast = Node::LocalBind(Box::new(LocalBindStruct {
-            bind: (Node::Ident("foo".to_string()), Node::Int(5)),
+            bind: BindStruct { name: Node::Ident("foo".to_string()), expr: Node::Int(5) },
             scope: Node::Add(
                 Box::new(Node::Ident("foo".to_string())),
                 Box::new(Node::Int(2)),
@@ -402,10 +401,12 @@ mod tests {
                 Some(Box::new(List(Some(3), Some(Box::new(List(None, None)))))),
             ))),
         );
-        let ast = Node::Bind(
-            Box::new(Node::Ident("lst".to_string())),
-            Box::new(Node::List(list.clone())),
-        );
+        let ast = Node::Bind(Box::new(
+                BindStruct {
+                    name: Node::Ident("lst".to_string()),
+                    expr: Node::List(list.clone()),
+                }
+        ));
         let mut bounds = Bounds::new();
         let expected = Output {
             name: Some("lst".to_string()),
