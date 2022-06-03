@@ -8,4 +8,5 @@ pub(crate) enum Ty {
     Int(i64),   // int
     Bool(bool), // bool
     List(List), // list
+    Fn,         // function
 }

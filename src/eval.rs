@@ -209,4 +209,18 @@ mod tests {
         assert_eq!(expected, actual);
         assert_eq!(bounds, Bounds::new());
     }
+
+    #[test]
+    fn eval_func_definition() {
+        let input = "let square x = x * x;;";
+        let mut bounds = Bounds::new();
+        // TODO
+        let expected = "val square : ... = <fun>";
+        let actual = eval(input, &mut bounds).unwrap();
+        assert_eq!(expected, actual);
+        assert_eq!(
+            bounds,
+            Bounds(HashMap::from([("square".to_string(), Ty::Fn)])),
+        );
+    }
 }

@@ -23,6 +23,7 @@ impl fmt::Display for Output {
                 write!(f, "int list = ")?;
                 list.fmt(f)
             }
+            Ty::Fn => write!(f, "... = <fun>"),
         }
     }
 }
@@ -173,14 +174,19 @@ pub(super) fn eval_ast(ast: &Node, bounds: &mut Bounds) -> Result<Output, String
             None => Err(format!("Unbound value {}", name)),
         },
         Node::Bind(bind) => {
-            let BindStruct { name, expr } = &**bind;
+            let BindStruct { name, args, expr } = &**bind;
             let name = match name {
                 Node::Ident(name) => name.clone(),
                 _ => return Err("Expected a value name".to_string()),
             };
-            let value = match eval_ast(expr, bounds)? {
-                Output { name: None, ty } => ty,
-                _ => return Err("Syntax error".to_string()),
+            // TODO: args
+            let value = if args.is_empty() {
+                match eval_ast(expr, bounds)? {
+                    Output { name: None, ty } => ty,
+                    _ => return Err("Syntax error".to_string()),
+                }
+            } else {
+                Ty::Fn
             };
             bounds.bind(name.clone(), value.clone());
             Ok(Output {
@@ -191,11 +197,16 @@ pub(super) fn eval_ast(ast: &Node, bounds: &mut Bounds) -> Result<Output, String
         Node::LocalBind(local_bind) => {
             let LocalBindStruct { bind, scope } = &**local_bind;
             // Eval local binding.
-            let BindStruct { name, expr } = &*bind;
+            let BindStruct {
+                name,
+                args: _,
+                expr,
+            } = &*bind;
             let name = match name {
                 Node::Ident(name) => name.clone(),
                 _ => return Err("Expected a value name".to_string()),
             };
+            // TODO: args
             let value = match eval_ast(expr, bounds)? {
                 Output { name: None, ty } => ty,
                 _ => return Err("Syntax error".to_string()),
@@ -263,6 +274,7 @@ mod tests {
         // let foo = 123
         let ast = Node::Bind(Box::new(BindStruct {
             name: Node::Ident("foo".to_string()),
+            args: vec![],
             expr: Node::Int(123),
         }));
         let mut bounds = Bounds::new();
@@ -283,6 +295,7 @@ mod tests {
         // let foo = 123
         let ast = Node::Bind(Box::new(BindStruct {
             name: Node::Ident("foo".to_string()),
+            args: vec![],
             expr: Node::Int(987),
         }));
         let mut bounds = Bounds::new();
@@ -321,6 +334,7 @@ mod tests {
         let ast = Node::LocalBind(Box::new(LocalBindStruct {
             bind: BindStruct {
                 name: Node::Ident("x".to_string()),
+                args: vec![],
                 expr: Node::Int(5),
             },
             scope: Node::Add(
@@ -344,6 +358,7 @@ mod tests {
         let ast = Node::LocalBind(Box::new(LocalBindStruct {
             bind: BindStruct {
                 name: Node::Ident("foo".to_string()),
+                args: vec![],
                 expr: Node::Int(5),
             },
             scope: Node::Add(
@@ -411,6 +426,7 @@ mod tests {
         );
         let ast = Node::Bind(Box::new(BindStruct {
             name: Node::Ident("lst".to_string()),
+            args: vec![],
             expr: Node::List(list.clone()),
         }));
         let mut bounds = Bounds::new();
@@ -525,5 +541,30 @@ mod tests {
         };
         let actual = eval_ast(&ast, &mut bounds).unwrap();
         assert_eq!(expected, actual);
+    }
+
+    #[test]
+    fn eval_func_definition() {
+        // let square x = x * x
+        let ast = Node::Bind(Box::new(BindStruct {
+            name: Node::Ident("square".to_string()),
+            args: vec![Node::Ident("x".to_string())],
+            expr: Node::Mul(
+                Box::new(Node::Ident("x".to_string())),
+                Box::new(Node::Ident("x".to_string())),
+            ),
+        }));
+        let mut bounds = Bounds::new();
+        let expected = Output {
+            name: Some("square".to_string()),
+            ty: Ty::Fn,
+        };
+        let actual = eval_ast(&ast, &mut bounds).unwrap();
+        assert_eq!(expected, actual);
+        assert_eq!(
+            bounds,
+            // TODO
+            Bounds(HashMap::from([("square".to_string(), Ty::Fn)]))
+        );
     }
 }

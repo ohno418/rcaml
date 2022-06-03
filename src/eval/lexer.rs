@@ -237,4 +237,20 @@ mod tests {
         let actual = tokenize(input).unwrap();
         assert_eq!(expected, actual);
     }
+
+    #[test]
+    fn tokenizes_func_definition() {
+        let input = "let square x = x * x";
+        let expected = vec![
+            Token::Kw(KwKind::Let),
+            Token::Ident("square".to_string()),
+            Token::Ident("x".to_string()),
+            Token::Punct("=".to_string()),
+            Token::Ident("x".to_string()),
+            Token::Punct("*".to_string()),
+            Token::Ident("x".to_string()),
+        ];
+        let actual = tokenize(input).unwrap();
+        assert_eq!(expected, actual);
+    }
 }

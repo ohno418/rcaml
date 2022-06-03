@@ -20,7 +20,7 @@ pub(super) enum Node {
 #[derive(Debug, PartialEq)]
 pub(super) struct BindStruct {
     pub name: Node,
-    // args
+    pub args: Vec<Node>,
     pub expr: Node,
 }
 
@@ -45,7 +45,7 @@ fn parse_expr(tokens: &[Token]) -> Result<(Node, &[Token]), String> {
     parse_bind(tokens)
 }
 
-// <bind> ::= "let" identifier "=" <add> ("in" <expr>)?
+// <bind> ::= "let" identifier (identifier)* "=" <add> ("in" <expr>)?
 //          | <add>
 fn parse_bind(tokens: &[Token]) -> Result<(Node, &[Token]), String> {
     match tokens.get(0) {
@@ -59,9 +59,22 @@ fn parse_bind(tokens: &[Token]) -> Result<(Node, &[Token]), String> {
                 _ => return Err("Expected an identifier".to_string()),
             };
 
-            match rest.get(0) {
-                Some(Token::Punct(p)) if p == "=" => rest = &rest[1..],
-                _ => return Err("Expected =".to_string()),
+            let args = {
+                let mut args: Vec<Node> = Vec::new();
+                loop {
+                    match rest.get(0) {
+                        Some(Token::Punct(p)) if p == "=" => {
+                            rest = &rest[1..];
+                            break;
+                        }
+                        Some(Token::Ident(arg)) => {
+                            args.push(Node::Ident(arg.clone()));
+                            rest = &rest[1..];
+                        }
+                        _ => return Err("Syntax error".to_string()),
+                    };
+                }
+                args
             };
 
             let rhs;
@@ -75,6 +88,7 @@ fn parse_bind(tokens: &[Token]) -> Result<(Node, &[Token]), String> {
                         Node::LocalBind(Box::new(LocalBindStruct {
                             bind: BindStruct {
                                 name: Node::Ident(ident),
+                                args,
                                 expr: rhs,
                             },
                             scope: expr,
@@ -85,6 +99,7 @@ fn parse_bind(tokens: &[Token]) -> Result<(Node, &[Token]), String> {
                 _ => Ok((
                     Node::Bind(Box::new(BindStruct {
                         name: Node::Ident(ident),
+                        args,
                         expr: rhs,
                     })),
                     rest,
@@ -290,6 +305,7 @@ mod tests {
         ];
         let expected = Node::Bind(Box::new(BindStruct {
             name: Node::Ident("foo".to_string()),
+            args: vec![],
             expr: Node::Int(123),
         }));
         let actual = parse(&tokens).unwrap();
@@ -321,6 +337,7 @@ mod tests {
         let expected = Node::LocalBind(Box::new(LocalBindStruct {
             bind: BindStruct {
                 name: Node::Ident("x".to_string()),
+                args: vec![],
                 expr: Node::Int(5),
             },
             scope: Node::Add(
@@ -392,6 +409,65 @@ mod tests {
     fn parses_not_equal() {
         let tokens = vec![Token::Int(2), Token::Punct("!=".to_string()), Token::Int(3)];
         let expected = Node::Neql(Box::new(Node::Int(2)), Box::new(Node::Int(3)));
+        let actual = parse(&tokens).unwrap();
+        assert_eq!(expected, actual);
+    }
+
+    #[test]
+    fn parses_func_definition() {
+        // let square x = x * x
+        let tokens = vec![
+            Token::Kw(KwKind::Let),
+            Token::Ident("square".to_string()),
+            Token::Ident("x".to_string()),
+            Token::Punct("=".to_string()),
+            Token::Ident("x".to_string()),
+            Token::Punct("*".to_string()),
+            Token::Ident("x".to_string()),
+        ];
+        let expected = Node::Bind(Box::new(BindStruct {
+            name: Node::Ident("square".to_string()),
+            args: vec![Node::Ident("x".to_string())],
+            expr: Node::Mul(
+                Box::new(Node::Ident("x".to_string())),
+                Box::new(Node::Ident("x".to_string())),
+            ),
+        }));
+        let actual = parse(&tokens).unwrap();
+        assert_eq!(expected, actual);
+    }
+
+    #[test]
+    fn parses_func_definition_with_multi_args() {
+        // let calc a b c = a * b + c
+        let tokens = vec![
+            Token::Kw(KwKind::Let),
+            Token::Ident("calc".to_string()),
+            Token::Ident("a".to_string()),
+            Token::Ident("b".to_string()),
+            Token::Ident("c".to_string()),
+            Token::Punct("=".to_string()),
+            Token::Ident("a".to_string()),
+            Token::Punct("*".to_string()),
+            Token::Ident("b".to_string()),
+            Token::Punct("+".to_string()),
+            Token::Ident("c".to_string()),
+        ];
+        let expected = Node::Bind(Box::new(BindStruct {
+            name: Node::Ident("calc".to_string()),
+            args: vec![
+                Node::Ident("a".to_string()),
+                Node::Ident("b".to_string()),
+                Node::Ident("c".to_string()),
+            ],
+            expr: Node::Add(
+                Box::new(Node::Mul(
+                    Box::new(Node::Ident("a".to_string())),
+                    Box::new(Node::Ident("b".to_string())),
+                )),
+                Box::new(Node::Ident("c".to_string())),
+            ),
+        }));
         let actual = parse(&tokens).unwrap();
         assert_eq!(expected, actual);
     }
