@@ -197,19 +197,18 @@ pub(super) fn eval_ast(ast: &Node, bounds: &mut Bounds) -> Result<Output, String
         Node::LocalBind(local_bind) => {
             let LocalBindStruct { bind, scope } = &**local_bind;
             // Eval local binding.
-            let BindStruct {
-                name,
-                args: _,
-                expr,
-            } = &*bind;
+            let BindStruct { name, args, expr } = &*bind;
             let name = match name {
                 Node::Ident(name) => name.clone(),
                 _ => return Err("Expected a value name".to_string()),
             };
-            // TODO: args
-            let value = match eval_ast(expr, bounds)? {
-                Output { name: None, ty } => ty,
-                _ => return Err("Syntax error".to_string()),
+            let value = if args.is_empty() {
+                match eval_ast(expr, bounds)? {
+                    Output { name: None, ty } => ty,
+                    _ => return Err("Syntax error".to_string()),
+                }
+            } else {
+                Ty::Fn
             };
             // Make new bound values from global bound values.
             let mut bounds_locally = bounds.clone();
@@ -566,5 +565,29 @@ mod tests {
             // TODO
             Bounds(HashMap::from([("square".to_string(), Ty::Fn)]))
         );
+    }
+
+    #[test]
+    fn eval_local_func_definition() {
+        // let square x = x * x in 42
+        let ast = Node::LocalBind(Box::new(LocalBindStruct {
+            bind: BindStruct {
+                name: Node::Ident("square".to_string()),
+                args: vec![Node::Ident("x".to_string())],
+                expr: Node::Mul(
+                    Box::new(Node::Ident("x".to_string())),
+                    Box::new(Node::Ident("x".to_string())),
+                ),
+            },
+            scope: Node::Int(42),
+        }));
+        let mut bounds = Bounds::new();
+        let expected = Output {
+            name: None,
+            ty: Ty::Int(42),
+        };
+        let actual = eval_ast(&ast, &mut bounds).unwrap();
+        assert_eq!(expected, actual);
+        assert_eq!(bounds, Bounds::new());
     }
 }

@@ -471,4 +471,33 @@ mod tests {
         let actual = parse(&tokens).unwrap();
         assert_eq!(expected, actual);
     }
+
+    #[test]
+    fn parses_local_func_definition() {
+        // let square x = x * x in 42
+        let tokens = vec![
+            Token::Kw(KwKind::Let),
+            Token::Ident("square".to_string()),
+            Token::Ident("x".to_string()),
+            Token::Punct("=".to_string()),
+            Token::Ident("x".to_string()),
+            Token::Punct("*".to_string()),
+            Token::Ident("x".to_string()),
+            Token::Kw(KwKind::In),
+            Token::Int(42),
+        ];
+        let expected = Node::LocalBind(Box::new(LocalBindStruct {
+            bind: BindStruct {
+                name: Node::Ident("square".to_string()),
+                args: vec![Node::Ident("x".to_string())],
+                expr: Node::Mul(
+                    Box::new(Node::Ident("x".to_string())),
+                    Box::new(Node::Ident("x".to_string())),
+                ),
+            },
+            scope: Node::Int(42),
+        }));
+        let actual = parse(&tokens).unwrap();
+        assert_eq!(expected, actual);
+    }
 }
