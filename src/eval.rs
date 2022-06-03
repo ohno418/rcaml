@@ -223,4 +223,14 @@ mod tests {
             Bounds(HashMap::from([("square".to_string(), Ty::Fn)])),
         );
     }
+
+    #[test]
+    fn eval_local_func_definition() {
+        let input = "let add a b = a + b in 42;;";
+        let mut bounds = Bounds::new();
+        let expected = "- : int = 42";
+        let actual = eval(input, &mut bounds).unwrap();
+        assert_eq!(expected, actual);
+        assert_eq!(bounds, Bounds::new());
+    }
 }
