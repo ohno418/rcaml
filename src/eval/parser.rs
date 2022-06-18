@@ -1,5 +1,5 @@
 use super::lexer::{KwKind, Token};
-use crate::ty::List;
+use super::ty::List;
 
 #[derive(Debug, PartialEq)]
 pub(super) enum Node {

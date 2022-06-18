@@ -1,5 +1,8 @@
-use super::parser::{BindStruct, LocalBindStruct, Node};
-use crate::{Bounds, Ty};
+use super::{
+    parser::{BindStruct, LocalBindStruct, Node},
+    Ty,
+};
+use crate::Bounds;
 use std::fmt;
 
 #[derive(Debug, PartialEq)]
@@ -231,7 +234,7 @@ pub(super) fn eval_ast(ast: &Node, bounds: &mut Bounds) -> Result<Output, String
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::ty::List;
+    use crate::eval::ty::List;
     use std::collections::HashMap;
 
     #[test]

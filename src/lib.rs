@@ -1,11 +1,9 @@
 mod eval;
 mod read;
-mod ty;
 
-use eval::eval;
+use eval::{eval, Ty};
 use read::{read, ReadError};
 use std::collections::HashMap;
-use ty::Ty;
 
 // global bound values
 #[derive(Clone, Debug, PartialEq)]

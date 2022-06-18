@@ -1,11 +1,13 @@
 mod eval_ast;
 mod lexer;
 mod parser;
+mod ty;
 
 use crate::Bounds;
 use eval_ast::eval_ast;
 use lexer::tokenize;
 use parser::parse;
+pub(crate) use ty::Ty;
 
 pub(crate) fn eval(input: &str, bounds: &mut Bounds) -> Result<String, String> {
     // Extract an expression that precedes ";;".
@@ -23,7 +25,6 @@ pub(crate) fn eval(input: &str, bounds: &mut Bounds) -> Result<String, String> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::Ty;
     use std::collections::HashMap;
 
     #[test]
