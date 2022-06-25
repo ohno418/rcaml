@@ -1,6 +1,6 @@
 use super::{
     parser::{BindStruct, LocalBindStruct, Node},
-    Ty,
+    Value,
 };
 use crate::Bounds;
 use std::fmt;
@@ -9,24 +9,24 @@ use std::fmt;
 pub(super) struct Output {
     // Representing bound names only for binding expressions.
     name: Option<String>,
-    ty: Ty,
+    value: Value,
 }
 
 impl fmt::Display for Output {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
-        let Output { name, ty } = self;
+        let Output { name, value } = self;
         match name {
             Some(name) => write!(f, "val {} : ", name)?,
             None => write!(f, "- : ")?,
         }
-        match ty {
-            Ty::Int(int) => write!(f, "int = {}", int),
-            Ty::Bool(b) => write!(f, "bool = {}", if *b { "true" } else { "false" }),
-            Ty::List(list) => {
+        match value {
+            Value::Int(int) => write!(f, "int = {}", int),
+            Value::Bool(b) => write!(f, "bool = {}", if *b { "true" } else { "false" }),
+            Value::List(list) => {
                 write!(f, "int list = ")?;
                 list.fmt(f)
             }
-            Ty::Fn => write!(f, "... = <fun>"),
+            Value::Fn => write!(f, "... = <fun>"),
         }
     }
 }
@@ -35,29 +35,29 @@ pub(super) fn eval_ast(ast: &Node, bounds: &mut Bounds) -> Result<Output, String
     match ast {
         Node::Int(i) => Ok(Output {
             name: None,
-            ty: Ty::Int(*i),
+            value: Value::Int(*i),
         }),
         Node::Bool(b) => Ok(Output {
             name: None,
-            ty: Ty::Bool(*b),
+            value: Value::Bool(*b),
         }),
         Node::List(list) => Ok(Output {
             name: None,
-            ty: Ty::List(list.clone()),
+            value: Value::List(list.clone()),
         }),
         Node::Add(lhs, rhs) => match (eval_ast(lhs, bounds)?, eval_ast(rhs, bounds)?) {
             (
                 Output {
                     name: None,
-                    ty: Ty::Int(l),
+                    value: Value::Int(l),
                 },
                 Output {
                     name: None,
-                    ty: Ty::Int(r),
+                    value: Value::Int(r),
                 },
             ) => Ok(Output {
                 name: None,
-                ty: Ty::Int(l + r),
+                value: Value::Int(l + r),
             }),
             _ => Err("This expression has a type other than int".to_string()),
         },
@@ -65,15 +65,15 @@ pub(super) fn eval_ast(ast: &Node, bounds: &mut Bounds) -> Result<Output, String
             (
                 Output {
                     name: None,
-                    ty: Ty::Int(l),
+                    value: Value::Int(l),
                 },
                 Output {
                     name: None,
-                    ty: Ty::Int(r),
+                    value: Value::Int(r),
                 },
             ) => Ok(Output {
                 name: None,
-                ty: Ty::Int(l - r),
+                value: Value::Int(l - r),
             }),
             _ => Err("This expression has a type other than int".to_string()),
         },
@@ -81,15 +81,15 @@ pub(super) fn eval_ast(ast: &Node, bounds: &mut Bounds) -> Result<Output, String
             (
                 Output {
                     name: None,
-                    ty: Ty::Int(l),
+                    value: Value::Int(l),
                 },
                 Output {
                     name: None,
-                    ty: Ty::Int(r),
+                    value: Value::Int(r),
                 },
             ) => Ok(Output {
                 name: None,
-                ty: Ty::Int(l * r),
+                value: Value::Int(l * r),
             }),
             _ => Err("This expression has a type other than int".to_string()),
         },
@@ -97,15 +97,15 @@ pub(super) fn eval_ast(ast: &Node, bounds: &mut Bounds) -> Result<Output, String
             (
                 Output {
                     name: None,
-                    ty: Ty::Int(l),
+                    value: Value::Int(l),
                 },
                 Output {
                     name: None,
-                    ty: Ty::Int(r),
+                    value: Value::Int(r),
                 },
             ) => Ok(Output {
                 name: None,
-                ty: Ty::Int(l / r),
+                value: Value::Int(l / r),
             }),
             _ => Err("This expression has a type other than int".to_string()),
         },
@@ -113,25 +113,25 @@ pub(super) fn eval_ast(ast: &Node, bounds: &mut Bounds) -> Result<Output, String
             if let (
                 Output {
                     name: None,
-                    ty: lty,
+                    value: lval,
                 },
                 Output {
                     name: None,
-                    ty: rty,
+                    value: rval,
                 },
             ) = (eval_ast(lhs, bounds)?, eval_ast(rhs, bounds)?)
             {
-                match (lty, rty) {
-                    (Ty::Int(l), Ty::Int(r)) => {
+                match (lval, rval) {
+                    (Value::Int(l), Value::Int(r)) => {
                         return Ok(Output {
                             name: None,
-                            ty: Ty::Bool(l == r),
+                            value: Value::Bool(l == r),
                         })
                     }
-                    (Ty::Bool(l), Ty::Bool(r)) => {
+                    (Value::Bool(l), Value::Bool(r)) => {
                         return Ok(Output {
                             name: None,
-                            ty: Ty::Bool(l == r),
+                            value: Value::Bool(l == r),
                         })
                     }
                     _ => (),
@@ -143,25 +143,25 @@ pub(super) fn eval_ast(ast: &Node, bounds: &mut Bounds) -> Result<Output, String
             if let (
                 Output {
                     name: None,
-                    ty: lty,
+                    value: lval,
                 },
                 Output {
                     name: None,
-                    ty: rty,
+                    value: rval,
                 },
             ) = (eval_ast(lhs, bounds)?, eval_ast(rhs, bounds)?)
             {
-                match (lty, rty) {
-                    (Ty::Int(l), Ty::Int(r)) => {
+                match (lval, rval) {
+                    (Value::Int(l), Value::Int(r)) => {
                         return Ok(Output {
                             name: None,
-                            ty: Ty::Bool(l != r),
+                            value: Value::Bool(l != r),
                         })
                     }
-                    (Ty::Bool(l), Ty::Bool(r)) => {
+                    (Value::Bool(l), Value::Bool(r)) => {
                         return Ok(Output {
                             name: None,
-                            ty: Ty::Bool(l != r),
+                            value: Value::Bool(l != r),
                         })
                     }
                     _ => (),
@@ -172,7 +172,7 @@ pub(super) fn eval_ast(ast: &Node, bounds: &mut Bounds) -> Result<Output, String
         Node::Ident(name) => match bounds.get(name) {
             Some(value) => Ok(Output {
                 name: None,
-                ty: value.clone(),
+                value: value.clone(),
             }),
             None => Err(format!("Unbound value {}", name)),
         },
@@ -185,16 +185,16 @@ pub(super) fn eval_ast(ast: &Node, bounds: &mut Bounds) -> Result<Output, String
             // TODO: args
             let value = if args.is_empty() {
                 match eval_ast(expr, bounds)? {
-                    Output { name: None, ty } => ty,
+                    Output { name: None, value } => value,
                     _ => return Err("Syntax error".to_string()),
                 }
             } else {
-                Ty::Fn
+                Value::Fn
             };
             bounds.bind(name.clone(), value.clone());
             Ok(Output {
                 name: Some(name),
-                ty: value,
+                value,
             })
         }
         Node::LocalBind(local_bind) => {
@@ -207,11 +207,11 @@ pub(super) fn eval_ast(ast: &Node, bounds: &mut Bounds) -> Result<Output, String
             };
             let value = if args.is_empty() {
                 match eval_ast(expr, bounds)? {
-                    Output { name: None, ty } => ty,
+                    Output { name: None, value } => value,
                     _ => return Err("Syntax error".to_string()),
                 }
             } else {
-                Ty::Fn
+                Value::Fn
             };
             // Make new bound values from global bound values.
             let mut bounds_locally = bounds.clone();
@@ -220,10 +220,10 @@ pub(super) fn eval_ast(ast: &Node, bounds: &mut Bounds) -> Result<Output, String
             match eval_ast(scope, &mut bounds_locally)? {
                 Output {
                     name: None,
-                    ty: Ty::Int(i),
+                    value: Value::Int(i),
                 } => Ok(Output {
                     name: None,
-                    ty: Ty::Int(i),
+                    value: Value::Int(i),
                 }),
                 _ => Err("Syntax error".to_string()),
             }
@@ -234,7 +234,7 @@ pub(super) fn eval_ast(ast: &Node, bounds: &mut Bounds) -> Result<Output, String
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::eval::ty::List;
+    use crate::eval::value::List;
     use std::collections::HashMap;
 
     #[test]
@@ -243,7 +243,7 @@ mod tests {
         let mut bounds = Bounds::new();
         let expected = Output {
             name: None,
-            ty: Ty::Int(123),
+            value: Value::Int(123),
         };
         let actual = eval_ast(&ast, &mut bounds).unwrap();
         assert_eq!(expected, actual);
@@ -265,7 +265,7 @@ mod tests {
         let mut bounds = Bounds::new();
         let expected = Output {
             name: None,
-            ty: Ty::Int(16),
+            value: Value::Int(16),
         };
         let actual = eval_ast(&ast, &mut bounds).unwrap();
         assert_eq!(expected, actual);
@@ -282,13 +282,13 @@ mod tests {
         let mut bounds = Bounds::new();
         let expected = Output {
             name: Some("foo".to_string()),
-            ty: Ty::Int(123),
+            value: Value::Int(123),
         };
         let actual = eval_ast(&ast, &mut bounds).unwrap();
         assert_eq!(expected, actual);
         assert_eq!(
             bounds,
-            Bounds(HashMap::from([("foo".to_string(), Ty::Int(123))])),
+            Bounds(HashMap::from([("foo".to_string(), Value::Int(123))])),
         );
     }
 
@@ -303,13 +303,13 @@ mod tests {
         let mut bounds = Bounds::new();
         let expected = Output {
             name: Some("foo".to_string()),
-            ty: Ty::Int(987),
+            value: Value::Int(987),
         };
         let actual = eval_ast(&ast, &mut bounds).unwrap();
         assert_eq!(expected, actual);
         assert_eq!(
             bounds,
-            Bounds(HashMap::from([("foo".to_string(), Ty::Int(987))])),
+            Bounds(HashMap::from([("foo".to_string(), Value::Int(987))])),
         );
     }
 
@@ -317,16 +317,16 @@ mod tests {
     fn eval_bound_global_value() {
         // foo
         let ast = Node::Ident("foo".to_string());
-        let mut bounds = Bounds(HashMap::from([("foo".to_string(), Ty::Int(123))]));
+        let mut bounds = Bounds(HashMap::from([("foo".to_string(), Value::Int(123))]));
         let expected = Output {
             name: None,
-            ty: Ty::Int(123),
+            value: Value::Int(123),
         };
         let actual = eval_ast(&ast, &mut bounds).unwrap();
         assert_eq!(expected, actual);
         assert_eq!(
             bounds,
-            Bounds(HashMap::from([("foo".to_string(), Ty::Int(123))]))
+            Bounds(HashMap::from([("foo".to_string(), Value::Int(123))]))
         );
     }
 
@@ -347,7 +347,7 @@ mod tests {
         let mut bounds = Bounds::new();
         let expected = Output {
             name: None,
-            ty: Ty::Int(7),
+            value: Value::Int(7),
         };
         let actual = eval_ast(&ast, &mut bounds).unwrap();
         assert_eq!(expected, actual);
@@ -368,16 +368,16 @@ mod tests {
                 Box::new(Node::Int(2)),
             ),
         }));
-        let mut bounds = Bounds(HashMap::from([("foo".to_string(), Ty::Int(123))]));
+        let mut bounds = Bounds(HashMap::from([("foo".to_string(), Value::Int(123))]));
         let expected = Output {
             name: None,
-            ty: Ty::Int(7),
+            value: Value::Int(7),
         };
         let actual = eval_ast(&ast, &mut bounds).unwrap();
         assert_eq!(expected, actual);
         assert_eq!(
             bounds,
-            Bounds(HashMap::from([("foo".to_string(), Ty::Int(123))]))
+            Bounds(HashMap::from([("foo".to_string(), Value::Int(123))]))
         );
     }
 
@@ -388,7 +388,7 @@ mod tests {
         let mut bounds = Bounds::new();
         let expected = Output {
             name: None,
-            ty: Ty::List(List::new()),
+            value: Value::List(List::new()),
         };
         let actual = eval_ast(&ast, &mut bounds).unwrap();
         assert_eq!(expected, actual);
@@ -409,7 +409,7 @@ mod tests {
         let mut bounds = Bounds::new();
         let expected = Output {
             name: None,
-            ty: Ty::List(list),
+            value: Value::List(list),
         };
         let actual = eval_ast(&ast, &mut bounds).unwrap();
         assert_eq!(expected, actual);
@@ -434,13 +434,13 @@ mod tests {
         let mut bounds = Bounds::new();
         let expected = Output {
             name: Some("lst".to_string()),
-            ty: Ty::List(list.clone()),
+            value: Value::List(list.clone()),
         };
         let actual = eval_ast(&ast, &mut bounds).unwrap();
         assert_eq!(expected, actual);
         assert_eq!(
             bounds,
-            Bounds(HashMap::from([("lst".to_string(), Ty::List(list))]))
+            Bounds(HashMap::from([("lst".to_string(), Value::List(list))]))
         );
     }
 
@@ -461,7 +461,7 @@ mod tests {
         let mut bounds = Bounds::new();
         let expected = Output {
             name: None,
-            ty: Ty::Bool(true),
+            value: Value::Bool(true),
         };
         let actual = eval_ast(&ast, &mut bounds).unwrap();
         assert_eq!(expected, actual);
@@ -474,7 +474,7 @@ mod tests {
         let mut bounds = Bounds::new();
         let expected = Output {
             name: None,
-            ty: Ty::Bool(false),
+            value: Value::Bool(false),
         };
         let actual = eval_ast(&ast, &mut bounds).unwrap();
         assert_eq!(expected, actual);
@@ -487,7 +487,7 @@ mod tests {
         let mut bounds = Bounds::new();
         let expected = Output {
             name: None,
-            ty: Ty::Bool(true),
+            value: Value::Bool(true),
         };
         let actual = eval_ast(&ast, &mut bounds).unwrap();
         assert_eq!(expected, actual);
@@ -500,7 +500,7 @@ mod tests {
         let mut bounds = Bounds::new();
         let expected = Output {
             name: None,
-            ty: Ty::Bool(false),
+            value: Value::Bool(false),
         };
         let actual = eval_ast(&ast, &mut bounds).unwrap();
         assert_eq!(expected, actual);
@@ -513,7 +513,7 @@ mod tests {
         let mut bounds = Bounds::new();
         let expected = Output {
             name: None,
-            ty: Ty::Bool(true),
+            value: Value::Bool(true),
         };
         let actual = eval_ast(&ast, &mut bounds).unwrap();
         assert_eq!(expected, actual);
@@ -526,7 +526,7 @@ mod tests {
         let mut bounds = Bounds::new();
         let expected = Output {
             name: None,
-            ty: Ty::Bool(true),
+            value: Value::Bool(true),
         };
         let actual = eval_ast(&ast, &mut bounds).unwrap();
         assert_eq!(expected, actual);
@@ -539,7 +539,7 @@ mod tests {
         let mut bounds = Bounds::new();
         let expected = Output {
             name: None,
-            ty: Ty::Bool(false),
+            value: Value::Bool(false),
         };
         let actual = eval_ast(&ast, &mut bounds).unwrap();
         assert_eq!(expected, actual);
@@ -559,14 +559,14 @@ mod tests {
         let mut bounds = Bounds::new();
         let expected = Output {
             name: Some("square".to_string()),
-            ty: Ty::Fn,
+            value: Value::Fn,
         };
         let actual = eval_ast(&ast, &mut bounds).unwrap();
         assert_eq!(expected, actual);
         assert_eq!(
             bounds,
             // TODO
-            Bounds(HashMap::from([("square".to_string(), Ty::Fn)]))
+            Bounds(HashMap::from([("square".to_string(), Value::Fn)]))
         );
     }
 
@@ -587,7 +587,7 @@ mod tests {
         let mut bounds = Bounds::new();
         let expected = Output {
             name: None,
-            ty: Ty::Int(42),
+            value: Value::Int(42),
         };
         let actual = eval_ast(&ast, &mut bounds).unwrap();
         assert_eq!(expected, actual);

@@ -1,6 +1,6 @@
 // value with its type
 #[derive(Clone, Debug, PartialEq)]
-pub(crate) enum Ty {
+pub(crate) enum Value {
     Int(i64),   // int
     Bool(bool), // bool
     List(List), // list

@@ -1,25 +1,25 @@
 mod eval;
 mod read;
 
-use eval::{eval, Ty};
+use eval::{eval, Value};
 use read::{read, ReadError};
 use std::collections::HashMap;
 
 // global bound values
 #[derive(Clone, Debug, PartialEq)]
-struct Bounds(HashMap<String, Ty>);
+struct Bounds(HashMap<String, Value>);
 
 impl Bounds {
     fn new() -> Self {
         Self(HashMap::new())
     }
 
-    fn get(&self, name: &str) -> Option<&Ty> {
+    fn get(&self, name: &str) -> Option<&Value> {
         let map = &self.0;
         map.get(name)
     }
 
-    fn bind(&mut self, name: String, value: Ty) {
+    fn bind(&mut self, name: String, value: Value) {
         let map = &mut self.0;
         map.insert(name, value);
     }

@@ -1,13 +1,13 @@
 mod eval_ast;
 mod lexer;
 mod parser;
-mod ty;
+mod value;
 
 use crate::Bounds;
 use eval_ast::eval_ast;
 use lexer::tokenize;
 use parser::parse;
-pub(crate) use ty::Ty;
+pub(crate) use value::Value;
 
 pub(crate) fn eval(input: &str, bounds: &mut Bounds) -> Result<String, String> {
     // Extract an expression that precedes ";;".
@@ -63,33 +63,33 @@ mod tests {
         assert_eq!(expected, actual);
         assert_eq!(
             bounds,
-            Bounds(HashMap::from([("foo".to_string(), Ty::Int(42))]))
+            Bounds(HashMap::from([("foo".to_string(), Value::Int(42))]))
         );
     }
 
     #[test]
     fn overwrites_existing_global_binding() {
         let input = "let foo = 123;;";
-        let mut bounds = Bounds(HashMap::from([("foo".to_string(), Ty::Int(42))]));
+        let mut bounds = Bounds(HashMap::from([("foo".to_string(), Value::Int(42))]));
         let expected = "val foo : int = 123";
         let actual = eval(input, &mut bounds).unwrap();
         assert_eq!(expected, actual);
         assert_eq!(
             bounds,
-            Bounds(HashMap::from([("foo".to_string(), Ty::Int(123))]))
+            Bounds(HashMap::from([("foo".to_string(), Value::Int(123))]))
         );
     }
 
     #[test]
     fn eval_existing_global_binding() {
         let input = "foo;;";
-        let mut bounds = Bounds(HashMap::from([("foo".to_string(), Ty::Int(456))]));
+        let mut bounds = Bounds(HashMap::from([("foo".to_string(), Value::Int(456))]));
         let expected = "- : int = 456";
         let actual = eval(input, &mut bounds).unwrap();
         assert_eq!(expected, actual);
         assert_eq!(
             bounds,
-            Bounds(HashMap::from([("foo".to_string(), Ty::Int(456))]))
+            Bounds(HashMap::from([("foo".to_string(), Value::Int(456))]))
         );
     }
 
@@ -221,7 +221,7 @@ mod tests {
         assert_eq!(expected, actual);
         assert_eq!(
             bounds,
-            Bounds(HashMap::from([("square".to_string(), Ty::Fn)])),
+            Bounds(HashMap::from([("square".to_string(), Value::Fn)])),
         );
     }
 
